@@ -7,6 +7,7 @@
     "web-push": "src/cli.js"
   },
   "scripts": {
+    "build": "tsdown",
     "download-browser": "node --harmony ./test/helpers/download-test-browsers.js",
     "lint": "node ./node_modules/eslint/bin/eslint --ignore-path .gitignore '.'",
     "pretest": "npm run lint && npm run download-browser",
@@ -42,12 +43,13 @@
     "eslint-config-airbnb": "19.0.4",
     "eslint-plugin-import": "2.29.1",
     "geckodriver": "4.3.0",
-    "nyc": "15.1.0",
     "mkdirp": "3.0.1",
     "mocha": "10.4.0",
+    "nyc": "15.1.0",
     "portfinder": "1.0.32",
     "selenium-assistant": "5.4.0",
-    "sinon": "17.0.1"
+    "sinon": "17.0.1",
+    "tsdown": "^0.21.9"
   },
   "engines": {
     "node": ">= 16"
