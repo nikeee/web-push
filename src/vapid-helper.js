@@ -1,5 +1,3 @@
-'use strict';
-
 const crypto = require('node:crypto');
 const asn1 = require('asn1.js');
 const jws = require('jws');

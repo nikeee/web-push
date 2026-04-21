@@ -1,5 +1,3 @@
-'use strict';
-
 function WebPushError(message, statusCode, headers, body, endpoint) {
   Error.captureStackTrace(this, this.constructor);
 

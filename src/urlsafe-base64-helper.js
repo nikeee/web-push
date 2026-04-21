@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @param {string} base64
  * @returns {boolean}

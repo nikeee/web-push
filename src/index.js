@@ -1,5 +1,3 @@
-'use strict';
-
 const vapidHelper = require('./vapid-helper.js');
 const encryptionHelper = require('./encryption-helper.js');
 const WebPushLib = require('./web-push-lib.js');

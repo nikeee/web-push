@@ -1,5 +1,3 @@
-'use strict';
-
 const assert = require('node:assert');
 const fs = require('node:fs');
 const seleniumAssistant = require('selenium-assistant');

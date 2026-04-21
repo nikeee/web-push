@@ -1,5 +1,3 @@
-'use strict';
-
 const os = require('node:os');
 const seleniumAssistant = require('selenium-assistant');
 

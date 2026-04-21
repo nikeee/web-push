@@ -1,5 +1,3 @@
-'use strict';
-
 const assert = require('node:assert');
 const crypto = require('node:crypto');
 const webPush = require('../src/index');
