@@ -1,4 +1,3 @@
-import * as url from "node:url";
 import * as https from "node:https";
 
 import WebPushError from "./WebPushError.ts";
@@ -262,8 +261,8 @@ export default class WebPushLib {
         requestDetails.headers.Authorization = "key=" + currentGCMAPIKey;
       }
     } else if (currentVapidDetails) {
-      const parsedUrl = url.parse(subscription.endpoint);
-      const audience = parsedUrl.protocol + "//" + parsedUrl.host;
+      const parsedUrl = new URL(subscription.endpoint);
+      const audience = parsedUrl.origin;
 
       const vapidHeaders = vapidHelper.getVapidHeaders(
         audience,
@@ -324,10 +323,10 @@ export default class WebPushLib {
 
     return new Promise((resolve, reject) => {
       const httpsOptions: any = {};
-      const urlParts = url.parse(requestDetails.endpoint);
+      const urlParts = new URL(requestDetails.endpoint);
       httpsOptions.hostname = urlParts.hostname;
-      httpsOptions.port = urlParts.port;
-      httpsOptions.path = urlParts.path;
+      httpsOptions.port = urlParts.port || undefined;
+      httpsOptions.path = urlParts.pathname + urlParts.search;
 
       httpsOptions.headers = requestDetails.headers;
       httpsOptions.method = requestDetails.method;
