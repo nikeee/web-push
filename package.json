@@ -42,7 +42,6 @@
   "devDependencies": {
     "chromedriver": "123.0.3",
     "geckodriver": "4.3.0",
-    "mkdirp": "3.0.1",
     "mocha": "10.4.0",
     "nyc": "15.1.0",
     "oxfmt": "^0.46.0",
