@@ -2,10 +2,7 @@
   "name": "web-push",
   "version": "3.6.7",
   "description": "Web Push library for Node.js",
-  "main": "src/index.js",
-  "bin": {
-    "web-push": "src/cli.js"
-  },
+  "main": "dist/index.mjs",
   "scripts": {
     "build": "tsdown",
     "download-browser": "node ./test/helpers/download-test-browsers.js",
@@ -22,6 +19,9 @@
     "push",
     "notifications",
     "push notifications"
+  ],
+  "files": [
+    "dist"
   ],
   "author": "Marco Castelluccio",
   "license": "MPL-2.0",
