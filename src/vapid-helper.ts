@@ -1,5 +1,4 @@
 import * as crypto from "node:crypto";
-import { URL } from "node:url";
 
 import * as asn1 from "asn1.js";
 import * as jws from "jws";
@@ -79,12 +78,11 @@ export function validateSubject(subject: string): void {
     );
   }
 
-  let subjectParseResult: URL | null = null;
-  try {
-    subjectParseResult = new URL(subject);
-  } catch (err) {
+  const subjectParseResult = URL.parse(subject);
+  if (subjectParseResult === null) {
     throw new Error("Vapid subject is not a valid URL. " + subject);
   }
+
   if (!["https:", "mailto:"].includes(subjectParseResult.protocol)) {
     throw new Error("Vapid subject is not an https: or mailto: URL. " + subject);
   }
