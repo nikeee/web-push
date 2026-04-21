@@ -1,5 +1,6 @@
 const assert = require('node:assert');
 const crypto = require('node:crypto');
+const { describe, test } = require('node:test');
 const webPush = require('../src/index');
 const ece = require('http_ece');
 
@@ -7,7 +8,7 @@ const userCurve = crypto.createECDH('prime256v1');
 const VALID_PUBLIC_KEY = userCurve.generateKeys().toString('base64url');
 const VALID_AUTH = crypto.randomBytes(16).toString('base64url');
 
-suite('Test Encryption Helpers', function() {
+describe('Test Encryption Helpers', function() {
   test('is defined', function() {
     assert(webPush.encrypt);
   });

@@ -2,10 +2,11 @@ const assert = require('node:assert');
 const urlParse = require('node:url').parse;
 const https = require('node:https');
 const crypto = require('node:crypto');
+const { describe, test } = require('node:test');
 const { generateRequestDetails } = require('../src/index');
 const jws = require('jws');
 
-suite('Test Generate Request Details', function() {
+describe('Test Generate Request Details', function() {
   test('is defined', function() {
     assert(generateRequestDetails);
   });

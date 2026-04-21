@@ -1,7 +1,8 @@
 const assert = require('node:assert');
+const { describe, test } = require('node:test');
 const { setGCMAPIKey } = require('../src/index');
 
-suite('setGCMAPIKey', function() {
+describe('setGCMAPIKey', function() {
   test('is defined', function() {
     assert(setGCMAPIKey);
   });

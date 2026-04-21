@@ -1,5 +1,6 @@
 const assert = require('node:assert');
 const fs = require('node:fs');
+const { describe, test, beforeEach, afterEach } = require('node:test');
 const seleniumAssistant = require('selenium-assistant');
 const webdriver = require('selenium-webdriver');
 const seleniumFirefox = require('selenium-webdriver/firefox');
@@ -176,20 +177,14 @@ availableBrowsers.forEach(function(browser) {
     return;
   }
 
-  suite('Selenium ' + browser.getPrettyName(), function() {
-    if (process.env.CI) {
-      this.retries(3);
-    }
-
-    setup(function() {
+  describe('Selenium ' + browser.getPrettyName(), function() {
+    beforeEach(function() {
       globalServer = null;
 
       return fs.promises.rm(testDirectory, { recursive: true, force: true });
     });
 
-    teardown(function() {
-      this.timeout(10000);
-
+    afterEach(function() {
       return seleniumAssistant.killWebDriver(globalDriver)
       .catch(function(err) {
         console.log('Error killing web driver: ', err);
@@ -223,54 +218,47 @@ availableBrowsers.forEach(function(browser) {
       });
     });
 
-    test('send/receive notification without payload with ' + browser.getPrettyName() + ' (aesgcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification without payload with ' + browser.getPrettyName() + ' (aesgcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         contentEncoding: webPush.supportedContentEncodings.AES_GCM
       });
     });
 
-    test('send/receive notification without payload with ' + browser.getPrettyName() + ' (aes128gcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification without payload with ' + browser.getPrettyName() + ' (aes128gcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         contentEncoding: webPush.supportedContentEncodings.AES_128_GCM
       });
     });
 
-    test('send/receive notification with payload with ' + browser.getPrettyName() + ' (aesgcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with payload with ' + browser.getPrettyName() + ' (aesgcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         payload: 'marco',
         contentEncoding: webPush.supportedContentEncodings.AES_GCM
       });
     });
 
-    test('send/receive notification with payload with ' + browser.getPrettyName() + ' (aes128gcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with payload with ' + browser.getPrettyName() + ' (aes128gcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         payload: 'marco',
         contentEncoding: webPush.supportedContentEncodings.AES_128_GCM
       });
     });
 
-    test('send/receive notification with vapid with ' + browser.getPrettyName() + ' (aesgcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with vapid with ' + browser.getPrettyName() + ' (aesgcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         vapid: VAPID_PARAM,
         contentEncoding: webPush.supportedContentEncodings.AES_GCM
       });
     });
 
-    test('send/receive notification with vapid with ' + browser.getPrettyName() + ' (aes128gcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with vapid with ' + browser.getPrettyName() + ' (aes128gcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         vapid: VAPID_PARAM,
         contentEncoding: webPush.supportedContentEncodings.AES_128_GCM
       });
     });
 
-    test('send/receive notification with payload & vapid with ' + browser.getPrettyName() + ' (aesgcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with payload & vapid with ' + browser.getPrettyName() + ' (aesgcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         payload: 'marco',
         vapid: VAPID_PARAM,
@@ -278,8 +266,7 @@ availableBrowsers.forEach(function(browser) {
       });
     });
 
-    test('send/receive notification with payload & vapid with ' + browser.getPrettyName() + ' (aes128gcm)', function() {
-      this.timeout(PUSH_TEST_TIMEOUT);
+    test('send/receive notification with payload & vapid with ' + browser.getPrettyName() + ' (aes128gcm)', { timeout: PUSH_TEST_TIMEOUT }, function() {
       return runTest(browser, {
         payload: 'marco',
         vapid: VAPID_PARAM,

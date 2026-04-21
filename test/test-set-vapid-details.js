@@ -1,4 +1,5 @@
 const assert = require('node:assert');
+const { describe, test } = require('node:test');
 const { setVapidDetails } = require('../src/index');
 
 const VALID_SUBJECT_MAILTO = 'mailto: example@example.com';
@@ -6,7 +7,7 @@ const VALID_SUBJECT_URL = 'https://exampe.com/contact';
 const VALID_PUBLIC_KEY = Buffer.alloc(65).toString('base64url');
 const VALID_PRIVATE_KEY = Buffer.alloc(32).toString('base64url');
 
-suite('setVapidDetails()', function() {
+describe('setVapidDetails()', function() {
   test('is defined', function() {
     assert(setVapidDetails);
   });

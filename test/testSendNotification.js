@@ -3,18 +3,18 @@ const crypto = require('node:crypto');
 const https = require('node:https');
 const fs = require('node:fs');
 const path = require('node:path');
+const { describe, test, beforeEach, after } = require('node:test');
 const ece = require('http_ece');
 const portfinder = require('portfinder');
 const jws = require('jws');
-const mocha = require('mocha');
 const WebPushConstants = require('../src/web-push-constants.js');
 
-suite('sendNotification', function() {
+describe('sendNotification', function() {
   let sendNotification;
   let setGCMAPIKey;
   let setVapidDetails;
 
-  mocha.beforeEach(function () {
+  beforeEach(function () {
     ({ sendNotification, setGCMAPIKey, setVapidDetails } = require('../src/index'));
   });
 
@@ -37,7 +37,7 @@ suite('sendNotification', function() {
     return originalHTTPSRequest.call(https, options, listener);
   };
 
-  mocha.beforeEach(function() {
+  beforeEach(function() {
     requestBody = null;
     requestDetails = null;
 
@@ -56,7 +56,7 @@ suite('sendNotification', function() {
     return returnPromise;
   });
 
-  mocha.after(function() {
+  after(function() {
     return closeServer();
   });
 

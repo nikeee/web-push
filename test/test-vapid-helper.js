@@ -1,7 +1,7 @@
 const assert = require('node:assert');
 const crypto = require('node:crypto');
+const { describe, test, beforeEach, after } = require('node:test');
 const sinon = require('sinon');
-const mocha = require('mocha');
 const webPush = require('../src/index');
 const vapidHelper = require('../src/vapid-helper');
 
@@ -19,14 +19,14 @@ const VALID_UNSAFE_BASE64_PRIVATE_KEY = Buffer.alloc(32).toString('base64');
 const VALID_CONTENT_ENCODING = webPush.supportedContentEncodings.AES_GCM;
 const VALID_EXPIRATION = Math.floor(Date.now() / 1000) + (60 * 60 * 12);
 
-suite('Test Vapid Helpers', function() {
+describe('Test Vapid Helpers', function() {
   const sandbox = sinon.createSandbox();
 
-  mocha.beforeEach(function() {
+  beforeEach(function() {
     sandbox.restore();
   });
 
-  mocha.after(function() {
+  after(function() {
     sandbox.restore();
   });
 
