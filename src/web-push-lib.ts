@@ -1,28 +1,22 @@
 import * as url from 'node:url';
 import * as https from 'node:https';
 
-import WebPushError from './WebPushError.js';
-import * as vapidHelper from './vapid-helper.js';
-import * as encryptionHelper from './encryption-helper.js';
-import * as webPushConstants from './web-push-constants.js';
-import * as urlBase64Helper from './urlsafe-base64-helper.js';
+import WebPushError from './WebPushError.ts';
+import * as vapidHelper from './vapid-helper.ts';
+import * as encryptionHelper from './encryption-helper.ts';
+import * as webPushConstants from './web-push-constants.ts';
+import * as urlBase64Helper from './urlsafe-base64-helper.ts';
 
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
 // Default TTL is four weeks.
 const DEFAULT_TTL = 2419200;
 
-let gcmAPIKey = '';
-let vapidDetails;
+let gcmAPIKey: string | null = '';
+let vapidDetails: { subject: string, publicKey: string, privateKey: string } | null | undefined;
 
 export default class WebPushLib {
-  /**
-   * When sending messages to a GCM endpoint you need to set the GCM API key
-   * by either calling setGMAPIKey() or passing in the API key as an option
-   * to sendNotification().
-   * @param  {string} apiKey The API key to send with the GCM request.
-   */
-  setGCMAPIKey(apiKey) {
+  setGCMAPIKey(apiKey: string | null): void {
     if (apiKey === null) {
       gcmAPIKey = null;
       return;
@@ -37,49 +31,24 @@ export default class WebPushLib {
     gcmAPIKey = apiKey;
   }
 
-  /**
-   * When making requests where you want to define VAPID details, call this
-   * method before sendNotification() or pass in the details and options to
-   * sendNotification.
-   * @param  {string} subject    This must be either a URL or a 'mailto:'
-   * address. For example: 'https://my-site.com/contact' or
-   * 'mailto: contact@my-site.com'
-   * @param  {string} publicKey  The public VAPID key, a URL safe, base64 encoded string
-   * @param  {string} privateKey The private VAPID key, a URL safe, base64 encoded string.
-   */
-  setVapidDetails(subject, publicKey, privateKey) {
+  setVapidDetails(subject: string | null, publicKey?: string, privateKey?: string): void {
     if (arguments.length === 1 && arguments[0] === null) {
       vapidDetails = null;
       return;
     }
 
-    vapidHelper.validateSubject(subject);
-    vapidHelper.validatePublicKey(publicKey);
-    vapidHelper.validatePrivateKey(privateKey);
+    vapidHelper.validateSubject(subject as string);
+    vapidHelper.validatePublicKey(publicKey as string);
+    vapidHelper.validatePrivateKey(privateKey as string);
 
     vapidDetails = {
-      subject: subject,
-      publicKey: publicKey,
-      privateKey: privateKey
+      subject: subject as string,
+      publicKey: publicKey as string,
+      privateKey: privateKey as string
     };
   }
 
-  /**
-   * To get the details of a request to trigger a push message, without sending
-   * a push notification call this method.
-   *
-   * This method will throw an error if there is an issue with the input.
-   * @param  {PushSubscription} subscription The PushSubscription you wish to
-   * send the notification to.
-   * @param  {string|Buffer} [payload]       The payload you wish to send to the
-   * the user.
-   * @param  {Object} [options]              Options for the GCM API key and
-   * vapid keys can be passed in if they are unique for each notification you
-   * wish to send.
-   * @return {Object}                       This method returns an Object which
-   * contains 'endpoint', 'method', 'headers' and 'payload'.
-   */
-  generateRequestDetails(subscription, payload, options) {
+  generateRequestDetails(subscription: any, payload?: string | Buffer | null, options?: any): any {
     if (!subscription || !subscription.endpoint) {
       throw new Error('You must pass in a subscription with at least '
       + 'an endpoint.');
@@ -103,14 +72,14 @@ export default class WebPushLib {
 
     let currentGCMAPIKey = gcmAPIKey;
     let currentVapidDetails = vapidDetails;
-    let timeToLive = DEFAULT_TTL;
-    let extraHeaders = {};
-    let contentEncoding = webPushConstants.supportedContentEncodings.AES_128_GCM;
-    let urgency = webPushConstants.supportedUrgency.NORMAL;
-    let topic;
-    let proxy;
-    let agent;
-    let timeout;
+    let timeToLive: number | undefined = DEFAULT_TTL;
+    let extraHeaders: Record<string, string> = {};
+    let contentEncoding: string = webPushConstants.supportedContentEncodings.AES_128_GCM;
+    let urgency: string = webPushConstants.supportedUrgency.NORMAL;
+    let topic: string | undefined;
+    let proxy: string | { host: string } | undefined;
+    let agent: https.Agent | undefined;
+    let timeout: number | undefined;
 
     if (options) {
       const validOptionKeys = [
@@ -160,7 +129,7 @@ export default class WebPushLib {
 
       if (options.TTL !== undefined) {
         timeToLive = Number(options.TTL);
-        if (timeToLive < 0) {
+        if (timeToLive! < 0) {
           throw new Error('TTL should be a number and should be at least 0');
         }
       }
@@ -225,7 +194,7 @@ export default class WebPushLib {
       timeToLive = DEFAULT_TTL;
     }
 
-    const requestDetails = {
+    const requestDetails: any = {
       method: 'POST',
       headers: {
         TTL: timeToLive
@@ -234,7 +203,7 @@ export default class WebPushLib {
     Object.keys(extraHeaders).forEach(function (header) {
       requestDetails.headers[header] = extraHeaders[header];
     });
-    let requestPayload = null;
+    let requestPayload: Buffer | null = null;
 
     if (payload) {
       const encrypted = encryptionHelper
@@ -318,22 +287,8 @@ export default class WebPushLib {
     return requestDetails;
   }
 
-  /**
-   * To send a push notification call this method with a subscription, optional
-   * payload and any options.
-   * @param  {PushSubscription} subscription The PushSubscription you wish to
-   * send the notification to.
-   * @param  {string|Buffer} [payload]       The payload you wish to send to the
-   * the user.
-   * @param  {Object} [options]              Options for the GCM API key and
-   * vapid keys can be passed in if they are unique for each notification you
-   * wish to send.
-   * @return {Promise}                       This method returns a Promise which
-   * resolves if the sending of the notification was successful, otherwise it
-   * rejects.
-   */
-  sendNotification(subscription, payload, options) {
-    let requestDetails;
+  sendNotification(subscription: any, payload?: string | Buffer | null, options?: any): Promise<{ statusCode: number, body: string, headers: any }> {
+    let requestDetails: any;
     try {
       requestDetails = this.generateRequestDetails(subscription, payload, options);
     } catch (err) {
@@ -341,7 +296,7 @@ export default class WebPushLib {
     }
 
     return new Promise(function(resolve, reject) {
-      const httpsOptions = {};
+      const httpsOptions: any = {};
       const urlParts = url.parse(requestDetails.endpoint);
       httpsOptions.hostname = urlParts.hostname;
       httpsOptions.port = urlParts.port;
@@ -370,17 +325,17 @@ export default class WebPushLib {
         });
 
         pushResponse.on('end', function() {
-          if (pushResponse.statusCode < 200 || pushResponse.statusCode > 299) {
+          if (pushResponse.statusCode! < 200 || pushResponse.statusCode! > 299) {
             reject(new WebPushError(
               'Received unexpected response code',
-              pushResponse.statusCode,
-              pushResponse.headers,
+              pushResponse.statusCode!,
+              pushResponse.headers as Record<string, string>,
               responseText,
               requestDetails.endpoint
             ));
           } else {
             resolve({
-              statusCode: pushResponse.statusCode,
+              statusCode: pushResponse.statusCode!,
               body: responseText,
               headers: pushResponse.headers
             });
