@@ -36,7 +36,6 @@
   "dependencies": {
     "asn1.js": "^5.4.1",
     "http_ece": "1.2.1",
-    "https-proxy-agent": "^7.0.6",
     "jws": "^4.0.1"
   },
   "devDependencies": {
