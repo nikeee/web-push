@@ -1,8 +1,6 @@
 import * as assert from "node:assert";
 import * as crypto from "node:crypto";
-import { describe, test, beforeEach, after } from "node:test";
-
-import * as sinon from "sinon";
+import { describe, test } from "node:test";
 
 import * as webPush from "../src/index.ts";
 import * as vapidHelper from "../src/vapid-helper.ts";
@@ -22,16 +20,6 @@ const VALID_CONTENT_ENCODING = webPush.supportedContentEncodings.AES_GCM;
 const VALID_EXPIRATION = Math.floor(Date.now() / 1000) + 60 * 60 * 12;
 
 describe("Test Vapid Helpers", () => {
-  const sandbox = sinon.createSandbox();
-
-  beforeEach(() => {
-    sandbox.restore();
-  });
-
-  after(() => {
-    sandbox.restore();
-  });
-
   test("is defined", () => {
     assert(webPush.generateVAPIDKeys);
     assert(webPush.getVapidHeaders);
@@ -49,8 +37,8 @@ describe("Test Vapid Helpers", () => {
     assert.equal(Buffer.from(keys.publicKey, "base64url").length, 65);
   });
 
-  test("generate vapid keys with padding", () => {
-    sandbox.stub(crypto, "createECDH").callsFake(() => {
+  test("generate vapid keys with padding", t => {
+    t.mock.method(crypto, "createECDH", () => {
       return {
         generateKeys: () => {},
         getPublicKey: () => Buffer.alloc(60),
