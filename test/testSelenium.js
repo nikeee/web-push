@@ -4,7 +4,6 @@ const seleniumAssistant = require('selenium-assistant');
 const webdriver = require('selenium-webdriver');
 const seleniumFirefox = require('selenium-webdriver/firefox');
 const mkdirp = require('mkdirp');
-const del = require('del');
 const webPush = require('../src/index');
 const createServer = require('./helpers/create-server');
 
@@ -186,7 +185,7 @@ availableBrowsers.forEach(function(browser) {
     setup(function() {
       globalServer = null;
 
-      return del(testDirectory);
+      return fs.promises.rm(testDirectory, { recursive: true, force: true });
     });
 
     teardown(function() {
@@ -199,22 +198,22 @@ availableBrowsers.forEach(function(browser) {
       .then(function() {
         globalDriver = null;
 
-        return del(testDirectory)
+        return fs.promises.rm(testDirectory, { recursive: true, force: true })
         .catch(function() {
           console.warn('Unable to delete test directory, going to wait 2 '
           + 'seconds and try again');
           // Add a timeout so that if the browser
           // changes any files in the test directory
-          // it doesn't cause del to throw an error
-          // (i.e. del checks files in directory, deletes them
-          // while another process adds a file, then del fails
+          // it doesn't cause fs.promises.rm to throw an error
+          // (i.e. rm checks files in directory, deletes them
+          // while another process adds a file, then rm fails
           // to remove a non-empty directory).
           return new Promise(function(resolve) {
             setTimeout(resolve, 2000);
           });
         })
         .then(function() {
-          return del(testDirectory);
+          return fs.promises.rm(testDirectory, { recursive: true, force: true });
         });
       })
       .then(function() {
