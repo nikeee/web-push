@@ -187,7 +187,7 @@ availableBrowsers.forEach(function(browser) {
     setup(function() {
       globalServer = null;
 
-      return del(testDirectory);
+      return fs.promises.rm(testDirectory, { recursive: true, force: true });
     });
 
     teardown(function() {
