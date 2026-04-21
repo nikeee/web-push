@@ -1,9 +1,11 @@
-const assert = require('node:assert');
-const crypto = require('node:crypto');
-const { describe, test, beforeEach, after } = require('node:test');
-const sinon = require('sinon');
-const webPush = require('../src/index');
-const vapidHelper = require('../src/vapid-helper');
+import * as assert from "node:assert";
+import * as crypto from "node:crypto";
+import { describe, test, beforeEach, after } from "node:test";
+
+import * as sinon from 'sinon';
+
+import * as webPush from '../src/index.js';
+import * as vapidHelper from '../src/vapid-helper.js';
 
 const VALID_AUDIENCE = 'https://example.com';
 const VALID_SUBJECT_MAILTO = 'mailto:example@example.com';

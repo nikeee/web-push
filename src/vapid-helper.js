@@ -1,8 +1,8 @@
 import * as crypto from 'node:crypto';
 import { URL } from 'node:url';
 
-const asn1 = require('asn1.js');
-const jws = require('jws');
+import * as asn1 from 'asn1.js';
+import * as jws from 'jws';
 
 import * as WebPushConstants from './web-push-constants.js';
 import * as urlBase64Helper from './urlsafe-base64-helper.js';

@@ -1,5 +1,5 @@
 import * as crypto from 'node:crypto';
-const ece = require('http_ece');
+import * as ece from 'http_ece';
 
 /**
  * @param {string} userPublicKey - The subscription's public key (p256dh), base64url-encoded.

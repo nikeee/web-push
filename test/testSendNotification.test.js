@@ -1,13 +1,15 @@
-const assert = require('node:assert');
-const crypto = require('node:crypto');
-const https = require('node:https');
-const fs = require('node:fs');
-const path = require('node:path');
-const { describe, test, beforeEach, after } = require('node:test');
-const ece = require('http_ece');
-const portfinder = require('portfinder');
-const jws = require('jws');
-const WebPushConstants = require('../src/web-push-constants.js');
+import * as assert from "node:assert";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import { describe, test, beforeEach, after } from "node:test";
+import * as https from 'node:https';
+
+import * as ece from 'http_ece';
+import * as jws from 'jws';
+import * as portfinder from 'portfinder';
+
+import * as WebPushConstants from '../src/web-push-constants.js';
+import { generateVAPIDKeys } from '../src/vapid-helper.js';
 
 describe('sendNotification', function() {
   let sendNotification;
@@ -42,8 +44,8 @@ describe('sendNotification', function() {
     requestDetails = null;
 
     // Delete caches of web push libs to start clean between test runs
-    delete require.cache[path.join(__dirname, '..', 'src', 'index.js')];
-    delete require.cache[path.join(__dirname, '..', 'src', 'web-push-lib.js')];
+    // delete require.cache[path.join(__dirname, '..', 'src', 'index.js')];
+    // delete require.cache[path.join(__dirname, '..', 'src', 'web-push-lib.js')];
 
     // Reset https request mock
     https.request = certHTTPSRequest;
@@ -70,7 +72,7 @@ describe('sendNotification', function() {
     auth: userAuth.toString('base64url')
   };
 
-  const vapidKeys = require('../src/vapid-helper.js').generateVAPIDKeys();
+  const vapidKeys = generateVAPIDKeys();
 
   function startServer() {
     const options = {

@@ -1,7 +1,8 @@
-const http = require('node:http');
-const fs = require('node:fs');
-const path = require('node:path');
-const portfinder = require('portfinder');
+import * as http from "node:http";
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+import * as portfinder from "portfinder";
 
 export default function createServer() {
   const demoPath = 'test/data/demo';

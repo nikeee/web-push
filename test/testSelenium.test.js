@@ -1,15 +1,17 @@
-const assert = require('node:assert');
-const fs = require('node:fs');
-const { describe, test, beforeEach, afterEach } = require('node:test');
-const seleniumAssistant = require('selenium-assistant');
-const webdriver = require('selenium-webdriver');
-const seleniumFirefox = require('selenium-webdriver/firefox');
-const webPush = require('../src/index');
-const createServer = require('./helpers/create-server');
+import * as assert from "node:assert";
+import * as fs from "node:fs";
+import { describe, test, beforeEach, afterEach } from "node:test";
+
+import * as seleniumAssistant from 'selenium-assistant';
+import * as webdriver from 'selenium-webdriver';
+import * as seleniumFirefox from 'selenium-webdriver/firefox';
+
+import * as webPush from '../src/index.js';
+import createServer from './helpers/create-server.js';
 
 // We need geckodriver on the path
-require('geckodriver');
-require('chromedriver');
+import 'geckodriver';
+import 'chromedriver';
 
 const vapidKeys = webPush.generateVAPIDKeys();
 

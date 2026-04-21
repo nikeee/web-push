@@ -1,5 +1,6 @@
-const os = require('node:os');
-const seleniumAssistant = require('selenium-assistant');
+import * as os from "node:os";
+
+import * as seleniumAssistant from 'selenium-assistant';
 
 const MAX_RETRIES = 3;
 let expiration;

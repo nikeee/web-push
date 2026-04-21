@@ -1,6 +1,7 @@
-const assert = require('node:assert');
-const { describe, test } = require('node:test');
-const { setGCMAPIKey } = require('../src/index');
+import * as assert from "node:assert";
+import { describe, test } from "node:test";
+
+import { setGCMAPIKey } from '../src/index.js';
 
 describe('setGCMAPIKey', function() {
   test('is defined', function() {

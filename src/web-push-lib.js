@@ -5,7 +5,9 @@ import WebPushError from './WebPushError.js';
 import * as vapidHelper from './vapid-helper.js';
 import * as encryptionHelper from './encryption-helper.js';
 import * as webPushConstants from './web-push-constants.js';
-import * as urlBase64Helper from './urlsafe-base64-helper';
+import * as urlBase64Helper from './urlsafe-base64-helper.js';
+
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 // Default TTL is four weeks.
 const DEFAULT_TTL = 2419200;
@@ -357,7 +359,6 @@ export default class WebPushLib {
       }
 
       if (requestDetails.proxy) {
-        const { HttpsProxyAgent } = require('https-proxy-agent'); // eslint-disable-line global-require
         httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
       }
 
