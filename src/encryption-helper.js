@@ -1,6 +1,6 @@
 'use strict';
 
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const ece = require('http_ece');
 
 const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {

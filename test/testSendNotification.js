@@ -1,10 +1,10 @@
 'use strict';
 
-const assert = require('assert');
-const crypto = require('crypto');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
+const assert = require('node:assert');
+const crypto = require('node:crypto');
+const https = require('node:https');
+const fs = require('node:fs');
+const path = require('node:path');
 const ece = require('http_ece');
 const portfinder = require('portfinder');
 const jws = require('jws');

@@ -1,8 +1,8 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('node:assert');
+const crypto = require('node:crypto');
 const sinon = require('sinon');
-const crypto = require('crypto');
 const mocha = require('mocha');
 const webPush = require('../src/index');
 const vapidHelper = require('../src/vapid-helper');

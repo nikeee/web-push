@@ -1,7 +1,7 @@
 'use strict';
 
-const url = require('url');
-const https = require('https');
+const url = require('node:url');
+const https = require('node:https');
 
 const WebPushError = require('./web-push-error.js');
 const vapidHelper = require('./vapid-helper.js');

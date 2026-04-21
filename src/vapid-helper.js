@@ -1,9 +1,9 @@
 'use strict';
 
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const asn1 = require('asn1.js');
 const jws = require('jws');
-const { URL } = require('url');
+const { URL } = require('node:url');
 
 const WebPushConstants = require('./web-push-constants.js');
 const urlBase64Helper = require('./urlsafe-base64-helper');

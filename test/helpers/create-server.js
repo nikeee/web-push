@@ -1,9 +1,9 @@
 'use strict';
 
-const http = require('http');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
 const portfinder = require('portfinder');
-const fs = require('fs');
-const path = require('path');
 
 function createServer() {
   const demoPath = 'test/data/demo';

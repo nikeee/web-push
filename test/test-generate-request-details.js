@@ -1,11 +1,11 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('node:assert');
+const urlParse = require('node:url').parse;
+const https = require('node:https');
+const crypto = require('node:crypto');
 const { generateRequestDetails } = require('../src/index');
-const crypto = require('crypto');
 const jws = require('jws');
-const urlParse = require('url').parse;
-const https = require('https');
 
 suite('Test Generate Request Details', function() {
   test('is defined', function() {

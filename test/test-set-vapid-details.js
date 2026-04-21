@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('node:assert');
 const { setVapidDetails } = require('../src/index');
 
 const VALID_SUBJECT_MAILTO = 'mailto: example@example.com';

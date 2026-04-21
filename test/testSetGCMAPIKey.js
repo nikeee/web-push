@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = require('assert');
+const assert = require('node:assert');
 const { setGCMAPIKey } = require('../src/index');
 
 suite('setGCMAPIKey', function() {

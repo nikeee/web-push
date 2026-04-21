@@ -1,11 +1,11 @@
 'use strict';
 
+const assert = require('node:assert');
+const fs = require('node:fs');
 const seleniumAssistant = require('selenium-assistant');
 const webdriver = require('selenium-webdriver');
 const seleniumFirefox = require('selenium-webdriver/firefox');
-const assert = require('assert');
 const mkdirp = require('mkdirp');
-const fs = require('fs');
 const del = require('del');
 const webPush = require('../src/index');
 const createServer = require('./helpers/create-server');

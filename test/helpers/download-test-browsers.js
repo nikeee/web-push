@@ -1,6 +1,6 @@
 'use strict';
 
-const os = require('os');
+const os = require('node:os');
 const seleniumAssistant = require('selenium-assistant');
 
 const MAX_RETRIES = 3;

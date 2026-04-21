@@ -1,7 +1,7 @@
 'use strict';
 
-const assert = require('assert');
-const crypto = require('crypto');
+const assert = require('node:assert');
+const crypto = require('node:crypto');
 const webPush = require('../src/index');
 const ece = require('http_ece');
 
