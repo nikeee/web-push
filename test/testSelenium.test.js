@@ -55,7 +55,9 @@ async function runTest(browserType, options) {
 
     if (subscribeError) {
       console.log("subscribeError: ", subscribeError);
-      throw new Error(typeof subscribeError === "string" ? subscribeError : JSON.stringify(subscribeError));
+      throw new Error(
+        typeof subscribeError === "string" ? subscribeError : JSON.stringify(subscribeError),
+      );
     }
 
     const subscriptionJSON = await page.evaluate(() => window.testSubscription);
@@ -86,11 +88,9 @@ async function runTest(browserType, options) {
     }
 
     const expectedTitle = options.payload ? options.payload : "no payload";
-    await page.waitForFunction(
-      (title) => document.title === title,
-      expectedTitle,
-      { timeout: 60000 },
-    );
+    await page.waitForFunction(title => document.title === title, expectedTitle, {
+      timeout: 60000,
+    });
   } finally {
     await browser.close();
     server.close();
