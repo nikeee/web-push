@@ -111,7 +111,7 @@ export default class WebPushLib {
 
       if (options.headers) {
         extraHeaders = options.headers;
-        let duplicates = Object.keys(extraHeaders).filter(function (header) {
+        let duplicates = Object.keys(extraHeaders).filter(header => {
           return typeof options[header] !== "undefined";
         });
 
@@ -216,7 +216,7 @@ export default class WebPushLib {
         TTL: timeToLive,
       },
     };
-    Object.keys(extraHeaders).forEach(function (header) {
+    Object.keys(extraHeaders).forEach(header => {
       requestDetails.headers[header] = extraHeaders[header];
     });
     let requestPayload: Buffer | null = null;
@@ -322,7 +322,7 @@ export default class WebPushLib {
       return Promise.reject(err);
     }
 
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       const httpsOptions: any = {};
       const urlParts = url.parse(requestDetails.endpoint);
       httpsOptions.hostname = urlParts.hostname;
@@ -344,14 +344,14 @@ export default class WebPushLib {
         httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
       }
 
-      const pushRequest = https.request(httpsOptions, function (pushResponse) {
+      const pushRequest = https.request(httpsOptions, pushResponse => {
         let responseText = "";
 
-        pushResponse.on("data", function (chunk) {
+        pushResponse.on("data", chunk => {
           responseText += chunk;
         });
 
-        pushResponse.on("end", function () {
+        pushResponse.on("end", () => {
           if (pushResponse.statusCode! < 200 || pushResponse.statusCode! > 299) {
             reject(
               new WebPushError(
@@ -373,12 +373,12 @@ export default class WebPushLib {
       });
 
       if (requestDetails.timeout) {
-        pushRequest.on("timeout", function () {
+        pushRequest.on("timeout", () => {
           pushRequest.destroy(new Error("Socket timeout"));
         });
       }
 
-      pushRequest.on("error", function (e) {
+      pushRequest.on("error", e => {
         reject(e);
       });
 
