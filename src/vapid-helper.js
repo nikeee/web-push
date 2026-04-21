@@ -35,7 +35,7 @@ function toPEM(key) {
   });
 }
 
-function generateVAPIDKeys() {
+export function generateVAPIDKeys() {
   const curve = crypto.createECDH('prime256v1');
   curve.generateKeys();
 
@@ -63,7 +63,7 @@ function generateVAPIDKeys() {
   };
 }
 
-function validateSubject(subject) {
+export function validateSubject(subject) {
   if (!subject) {
     throw new Error('No subject set in vapidDetails.subject.');
   }
@@ -89,7 +89,7 @@ function validateSubject(subject) {
     }
 }
 
-function validatePublicKey(publicKey) {
+export function validatePublicKey(publicKey) {
   if (!publicKey) {
     throw new Error('No key set vapidDetails.publicKey');
   }
@@ -110,7 +110,7 @@ function validatePublicKey(publicKey) {
   }
 }
 
-function validatePrivateKey(privateKey) {
+export function validatePrivateKey(privateKey) {
   if (!privateKey) {
     throw new Error('No key set in vapidDetails.privateKey');
   }
@@ -139,7 +139,7 @@ function validatePrivateKey(privateKey) {
  * @param {Number} numSeconds Number of seconds to be added
  * @return {Number} Future expiration in seconds
  */
-function getFutureExpirationTimestamp(numSeconds) {
+export function getFutureExpirationTimestamp(numSeconds) {
   const futureExp = new Date();
   futureExp.setSeconds(futureExp.getSeconds() + numSeconds);
   return Math.floor(futureExp.getTime() / 1000);
@@ -151,7 +151,7 @@ function getFutureExpirationTimestamp(numSeconds) {
  *
  * @param {Number} expiration Expiration seconds from Epoch to be validated
  */
-function validateExpiration(expiration) {
+export function validateExpiration(expiration) {
   if (!Number.isInteger(expiration)) {
     throw new Error('`expiration` value must be a number');
   }
@@ -182,7 +182,7 @@ function validateExpiration(expiration) {
  * @return {Object}                 Returns an Object with the Authorization and
  * 'Crypto-Key' values to be used as headers.
  */
-function getVapidHeaders(audience, subject, publicKey, privateKey, contentEncoding, expiration) {
+export function getVapidHeaders(audience, subject, publicKey, privateKey, contentEncoding, expiration) {
   if (!audience) {
     throw new Error('No audience could be generated for VAPID.');
   }
@@ -241,13 +241,3 @@ function getVapidHeaders(audience, subject, publicKey, privateKey, contentEncodi
 
   throw new Error('Unsupported encoding type specified.');
 }
-
-module.exports = {
-  generateVAPIDKeys: generateVAPIDKeys,
-  getFutureExpirationTimestamp: getFutureExpirationTimestamp,
-  getVapidHeaders: getVapidHeaders,
-  validateSubject: validateSubject,
-  validatePublicKey: validatePublicKey,
-  validatePrivateKey: validatePrivateKey,
-  validateExpiration: validateExpiration
-};

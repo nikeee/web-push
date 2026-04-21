@@ -13,7 +13,7 @@ const DEFAULT_TTL = 2419200;
 let gcmAPIKey = '';
 let vapidDetails;
 
-class WebPushLib {
+export default class WebPushLib {
   /**
    * When sending messages to a GCM endpoint you need to set the GCM API key
    * by either calling setGMAPIKey() or passing in the API key as an option
@@ -405,5 +405,3 @@ class WebPushLib {
     });
   }
 }
-
-module.exports = WebPushLib;

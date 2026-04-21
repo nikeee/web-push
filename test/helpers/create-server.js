@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const portfinder = require('portfinder');
 
-function createServer() {
+export default function createServer() {
   const demoPath = 'test/data/demo';
 
   const server = http.createServer(function(req, res) {
@@ -54,4 +54,3 @@ function createServer() {
   });
 }
 
-module.exports = createServer;

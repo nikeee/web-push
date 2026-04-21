@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const ece = require('http_ece');
 
-const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
+export function encrypt(userPublicKey, userAuth, payload, contentEncoding) {
   if (!userPublicKey) {
     throw new Error('No user public key provided for encryption.');
   }
@@ -53,8 +53,4 @@ const encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
     salt: salt,
     cipherText: cipherText
   };
-};
-
-module.exports = {
-  encrypt: encrypt
 };

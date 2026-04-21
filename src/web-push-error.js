@@ -1,4 +1,4 @@
-module.exports = class WebPushError extends Error {
+export default class WebPushError extends Error {
   constructor(message, statusCode, headers, body, endpoint) {
     super(message);
     this.name = this.constructor.name;
