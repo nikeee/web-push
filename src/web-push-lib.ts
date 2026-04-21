@@ -1,19 +1,19 @@
-import * as url from 'node:url';
-import * as https from 'node:https';
+import * as url from "node:url";
+import * as https from "node:https";
 
-import WebPushError from './WebPushError.ts';
-import * as vapidHelper from './vapid-helper.ts';
-import * as encryptionHelper from './encryption-helper.ts';
-import * as webPushConstants from './web-push-constants.ts';
-import * as urlBase64Helper from './urlsafe-base64-helper.ts';
+import WebPushError from "./WebPushError.ts";
+import * as vapidHelper from "./vapid-helper.ts";
+import * as encryptionHelper from "./encryption-helper.ts";
+import * as webPushConstants from "./web-push-constants.ts";
+import * as urlBase64Helper from "./urlsafe-base64-helper.ts";
 
-import { HttpsProxyAgent } from 'https-proxy-agent';
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 // Default TTL is four weeks.
 const DEFAULT_TTL = 2419200;
 
-let gcmAPIKey: string | null = '';
-let vapidDetails: { subject: string, publicKey: string, privateKey: string } | null | undefined;
+let gcmAPIKey: string | null = "";
+let vapidDetails: { subject: string; publicKey: string; privateKey: string } | null | undefined;
 
 export default class WebPushLib {
   setGCMAPIKey(apiKey: string | null): void {
@@ -22,10 +22,8 @@ export default class WebPushLib {
       return;
     }
 
-    if (typeof apiKey === 'undefined'
-    || typeof apiKey !== 'string'
-    || apiKey.length === 0) {
-      throw new Error('The GCM API Key should be a non-empty string or null.');
+    if (typeof apiKey === "undefined" || typeof apiKey !== "string" || apiKey.length === 0) {
+      throw new Error("The GCM API Key should be a non-empty string or null.");
     }
 
     gcmAPIKey = apiKey;
@@ -44,29 +42,31 @@ export default class WebPushLib {
     vapidDetails = {
       subject: subject as string,
       publicKey: publicKey as string,
-      privateKey: privateKey as string
+      privateKey: privateKey as string,
     };
   }
 
   generateRequestDetails(subscription: any, payload?: string | Buffer | null, options?: any): any {
     if (!subscription || !subscription.endpoint) {
-      throw new Error('You must pass in a subscription with at least '
-      + 'an endpoint.');
+      throw new Error("You must pass in a subscription with at least " + "an endpoint.");
     }
 
-    if (typeof subscription.endpoint !== 'string'
-    || subscription.endpoint.length === 0) {
-      throw new Error('The subscription endpoint must be a string with '
-      + 'a valid URL.');
+    if (typeof subscription.endpoint !== "string" || subscription.endpoint.length === 0) {
+      throw new Error("The subscription endpoint must be a string with " + "a valid URL.");
     }
 
     if (payload) {
       // Validate the subscription keys
-      if (typeof subscription !== 'object' || !subscription.keys
-      || !subscription.keys.p256dh
-      || !subscription.keys.auth) {
-        throw new Error('To send a message with a payload, the '
-        + 'subscription must have \'auth\' and \'p256dh\' keys.');
+      if (
+        typeof subscription !== "object" ||
+        !subscription.keys ||
+        !subscription.keys.p256dh ||
+        !subscription.keys.auth
+      ) {
+        throw new Error(
+          "To send a message with a payload, the " +
+            "subscription must have 'auth' and 'p256dh' keys.",
+        );
       }
     }
 
@@ -83,38 +83,45 @@ export default class WebPushLib {
 
     if (options) {
       const validOptionKeys = [
-        'headers',
-        'gcmAPIKey',
-        'vapidDetails',
-        'TTL',
-        'contentEncoding',
-        'urgency',
-        'topic',
-        'proxy',
-        'agent',
-        'timeout'
+        "headers",
+        "gcmAPIKey",
+        "vapidDetails",
+        "TTL",
+        "contentEncoding",
+        "urgency",
+        "topic",
+        "proxy",
+        "agent",
+        "timeout",
       ];
       const optionKeys = Object.keys(options);
       for (let i = 0; i < optionKeys.length; i += 1) {
         const optionKey = optionKeys[i];
         if (!validOptionKeys.includes(optionKey)) {
-          throw new Error('\'' + optionKey + '\' is an invalid option. '
-          + 'The valid options are [\'' + validOptionKeys.join('\', \'')
-          + '\'].');
+          throw new Error(
+            "'" +
+              optionKey +
+              "' is an invalid option. " +
+              "The valid options are ['" +
+              validOptionKeys.join("', '") +
+              "'].",
+          );
         }
       }
 
       if (options.headers) {
         extraHeaders = options.headers;
-        let duplicates = Object.keys(extraHeaders)
-            .filter(function (header) {
-              return typeof options[header] !== 'undefined';
-            });
+        let duplicates = Object.keys(extraHeaders).filter(function (header) {
+          return typeof options[header] !== "undefined";
+        });
 
         if (duplicates.length > 0) {
-          throw new Error('Duplicated headers defined ['
-          + duplicates.join(',') + ']. Please either define the header in the'
-          + 'top level options OR in the \'headers\' key.');
+          throw new Error(
+            "Duplicated headers defined [" +
+              duplicates.join(",") +
+              "]. Please either define the header in the" +
+              "top level options OR in the 'headers' key.",
+          );
         }
       }
 
@@ -130,75 +137,84 @@ export default class WebPushLib {
       if (options.TTL !== undefined) {
         timeToLive = Number(options.TTL);
         if (timeToLive! < 0) {
-          throw new Error('TTL should be a number and should be at least 0');
+          throw new Error("TTL should be a number and should be at least 0");
         }
       }
 
       if (options.contentEncoding) {
-        if ((options.contentEncoding === webPushConstants.supportedContentEncodings.AES_128_GCM
-          || options.contentEncoding === webPushConstants.supportedContentEncodings.AES_GCM)) {
+        if (
+          options.contentEncoding === webPushConstants.supportedContentEncodings.AES_128_GCM ||
+          options.contentEncoding === webPushConstants.supportedContentEncodings.AES_GCM
+        ) {
           contentEncoding = options.contentEncoding;
         } else {
-          throw new Error('Unsupported content encoding specified.');
+          throw new Error("Unsupported content encoding specified.");
         }
       }
 
       if (options.urgency) {
-        if ((options.urgency === webPushConstants.supportedUrgency.VERY_LOW
-          || options.urgency === webPushConstants.supportedUrgency.LOW
-          || options.urgency === webPushConstants.supportedUrgency.NORMAL
-          || options.urgency === webPushConstants.supportedUrgency.HIGH)) {
+        if (
+          options.urgency === webPushConstants.supportedUrgency.VERY_LOW ||
+          options.urgency === webPushConstants.supportedUrgency.LOW ||
+          options.urgency === webPushConstants.supportedUrgency.NORMAL ||
+          options.urgency === webPushConstants.supportedUrgency.HIGH
+        ) {
           urgency = options.urgency;
         } else {
-          throw new Error('Unsupported urgency specified.');
+          throw new Error("Unsupported urgency specified.");
         }
       }
 
       if (options.topic) {
         if (!urlBase64Helper.validate(options.topic)) {
-          throw new Error('Unsupported characters set use the URL or filename-safe Base64 characters set');
+          throw new Error(
+            "Unsupported characters set use the URL or filename-safe Base64 characters set",
+          );
         }
         if (options.topic.length > 32) {
-          throw new Error('use maximum of 32 characters from the URL or filename-safe Base64 characters set');
+          throw new Error(
+            "use maximum of 32 characters from the URL or filename-safe Base64 characters set",
+          );
         }
         topic = options.topic;
       }
 
       if (options.proxy) {
-        if (typeof options.proxy === 'string'
-          || typeof options.proxy.host === 'string') {
+        if (typeof options.proxy === "string" || typeof options.proxy.host === "string") {
           proxy = options.proxy;
         } else {
-          console.warn('Attempt to use proxy option, but invalid type it should be a string or proxy options object.');
+          console.warn(
+            "Attempt to use proxy option, but invalid type it should be a string or proxy options object.",
+          );
         }
       }
 
       if (options.agent) {
         if (options.agent instanceof https.Agent) {
           if (proxy) {
-            console.warn('Agent option will be ignored because proxy option is defined.');
+            console.warn("Agent option will be ignored because proxy option is defined.");
           }
 
           agent = options.agent;
         } else {
-          console.warn('Wrong type for the agent option, it should be an instance of https.Agent.');
+          console.warn("Wrong type for the agent option, it should be an instance of https.Agent.");
         }
       }
 
-      if (typeof options.timeout === 'number') {
+      if (typeof options.timeout === "number") {
         timeout = options.timeout;
       }
     }
 
-    if (typeof timeToLive === 'undefined') {
+    if (typeof timeToLive === "undefined") {
       timeToLive = DEFAULT_TTL;
     }
 
     const requestDetails: any = {
-      method: 'POST',
+      method: "POST",
       headers: {
-        TTL: timeToLive
-      }
+        TTL: timeToLive,
+      },
     };
     Object.keys(extraHeaders).forEach(function (header) {
       requestDetails.headers[header] = extraHeaders[header];
@@ -206,61 +222,68 @@ export default class WebPushLib {
     let requestPayload: Buffer | null = null;
 
     if (payload) {
-      const encrypted = encryptionHelper
-        .encrypt(subscription.keys.p256dh, subscription.keys.auth, payload, contentEncoding);
+      const encrypted = encryptionHelper.encrypt(
+        subscription.keys.p256dh,
+        subscription.keys.auth,
+        payload,
+        contentEncoding,
+      );
 
-      requestDetails.headers['Content-Length'] = encrypted.cipherText.length;
-      requestDetails.headers['Content-Type'] = 'application/octet-stream';
+      requestDetails.headers["Content-Length"] = encrypted.cipherText.length;
+      requestDetails.headers["Content-Type"] = "application/octet-stream";
 
       if (contentEncoding === webPushConstants.supportedContentEncodings.AES_128_GCM) {
-        requestDetails.headers['Content-Encoding'] = webPushConstants.supportedContentEncodings.AES_128_GCM;
+        requestDetails.headers["Content-Encoding"] =
+          webPushConstants.supportedContentEncodings.AES_128_GCM;
       } else if (contentEncoding === webPushConstants.supportedContentEncodings.AES_GCM) {
-        requestDetails.headers['Content-Encoding'] = webPushConstants.supportedContentEncodings.AES_GCM;
-        requestDetails.headers.Encryption = 'salt=' + encrypted.salt;
-        requestDetails.headers['Crypto-Key'] = 'dh=' + encrypted.localPublicKey.toString('base64url');
+        requestDetails.headers["Content-Encoding"] =
+          webPushConstants.supportedContentEncodings.AES_GCM;
+        requestDetails.headers.Encryption = "salt=" + encrypted.salt;
+        requestDetails.headers["Crypto-Key"] =
+          "dh=" + encrypted.localPublicKey.toString("base64url");
       }
 
       requestPayload = encrypted.cipherText;
     } else {
-      requestDetails.headers['Content-Length'] = 0;
+      requestDetails.headers["Content-Length"] = 0;
     }
 
-    const isGCM = subscription.endpoint.startsWith('https://android.googleapis.com/gcm/send');
-    const isFCM = subscription.endpoint.startsWith('https://fcm.googleapis.com/fcm/send');
+    const isGCM = subscription.endpoint.startsWith("https://android.googleapis.com/gcm/send");
+    const isFCM = subscription.endpoint.startsWith("https://fcm.googleapis.com/fcm/send");
     // VAPID isn't supported by GCM hence the if, else if.
     if (isGCM) {
       if (!currentGCMAPIKey) {
-        console.warn('Attempt to send push notification to GCM endpoint, '
-        + 'but no GCM key is defined. Please use setGCMApiKey() or add '
-        + '\'gcmAPIKey\' as an option.');
+        console.warn(
+          "Attempt to send push notification to GCM endpoint, " +
+            "but no GCM key is defined. Please use setGCMApiKey() or add " +
+            "'gcmAPIKey' as an option.",
+        );
       } else {
-        requestDetails.headers.Authorization = 'key=' + currentGCMAPIKey;
+        requestDetails.headers.Authorization = "key=" + currentGCMAPIKey;
       }
     } else if (currentVapidDetails) {
       const parsedUrl = url.parse(subscription.endpoint);
-      const audience = parsedUrl.protocol + '//'
-      + parsedUrl.host;
+      const audience = parsedUrl.protocol + "//" + parsedUrl.host;
 
       const vapidHeaders = vapidHelper.getVapidHeaders(
         audience,
         currentVapidDetails.subject,
         currentVapidDetails.publicKey,
         currentVapidDetails.privateKey,
-        contentEncoding
+        contentEncoding,
       );
 
       requestDetails.headers.Authorization = vapidHeaders.Authorization;
 
       if (contentEncoding === webPushConstants.supportedContentEncodings.AES_GCM) {
-        if (requestDetails.headers['Crypto-Key']) {
-          requestDetails.headers['Crypto-Key'] += ';'
-          + vapidHeaders['Crypto-Key'];
+        if (requestDetails.headers["Crypto-Key"]) {
+          requestDetails.headers["Crypto-Key"] += ";" + vapidHeaders["Crypto-Key"];
         } else {
-          requestDetails.headers['Crypto-Key'] = vapidHeaders['Crypto-Key'];
+          requestDetails.headers["Crypto-Key"] = vapidHeaders["Crypto-Key"];
         }
       }
     } else if (isFCM && currentGCMAPIKey) {
-      requestDetails.headers.Authorization = 'key=' + currentGCMAPIKey;
+      requestDetails.headers.Authorization = "key=" + currentGCMAPIKey;
     }
 
     requestDetails.headers.Urgency = urgency;
@@ -287,7 +310,11 @@ export default class WebPushLib {
     return requestDetails;
   }
 
-  sendNotification(subscription: any, payload?: string | Buffer | null, options?: any): Promise<{ statusCode: number, body: string, headers: any }> {
+  sendNotification(
+    subscription: any,
+    payload?: string | Buffer | null,
+    options?: any,
+  ): Promise<{ statusCode: number; body: string; headers: any }> {
     let requestDetails: any;
     try {
       requestDetails = this.generateRequestDetails(subscription, payload, options);
@@ -295,7 +322,7 @@ export default class WebPushLib {
       return Promise.reject(err);
     }
 
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       const httpsOptions: any = {};
       const urlParts = url.parse(requestDetails.endpoint);
       httpsOptions.hostname = urlParts.hostname;
@@ -317,39 +344,41 @@ export default class WebPushLib {
         httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
       }
 
-      const pushRequest = https.request(httpsOptions, function(pushResponse) {
-        let responseText = '';
+      const pushRequest = https.request(httpsOptions, function (pushResponse) {
+        let responseText = "";
 
-        pushResponse.on('data', function(chunk) {
+        pushResponse.on("data", function (chunk) {
           responseText += chunk;
         });
 
-        pushResponse.on('end', function() {
+        pushResponse.on("end", function () {
           if (pushResponse.statusCode! < 200 || pushResponse.statusCode! > 299) {
-            reject(new WebPushError(
-              'Received unexpected response code',
-              pushResponse.statusCode!,
-              pushResponse.headers as Record<string, string>,
-              responseText,
-              requestDetails.endpoint
-            ));
+            reject(
+              new WebPushError(
+                "Received unexpected response code",
+                pushResponse.statusCode!,
+                pushResponse.headers as Record<string, string>,
+                responseText,
+                requestDetails.endpoint,
+              ),
+            );
           } else {
             resolve({
               statusCode: pushResponse.statusCode!,
               body: responseText,
-              headers: pushResponse.headers
+              headers: pushResponse.headers,
             });
           }
         });
       });
 
       if (requestDetails.timeout) {
-        pushRequest.on('timeout', function() {
-          pushRequest.destroy(new Error('Socket timeout'));
+        pushRequest.on("timeout", function () {
+          pushRequest.destroy(new Error("Socket timeout"));
         });
       }
 
-      pushRequest.on('error', function(e) {
+      pushRequest.on("error", function (e) {
         reject(e);
       });
 

@@ -4,285 +4,298 @@ import { parse as urlParse } from "node:url";
 import * as crypto from "node:crypto";
 import * as https from "node:https";
 
-import * as jws from 'jws';
+import * as jws from "jws";
 
-import { generateRequestDetails } from '../src/index.js';
-import { generateVAPIDKeys } from '../src/vapid-helper.js';
+import { generateRequestDetails } from "../src/index.js";
+import { generateVAPIDKeys } from "../src/vapid-helper.js";
 
-describe('Test Generate Request Details', function() {
-  test('is defined', function() {
+describe("Test Generate Request Details", function () {
+  test("is defined", function () {
     assert(generateRequestDetails);
   });
 
-  const userCurve = crypto.createECDH('prime256v1');
+  const userCurve = crypto.createECDH("prime256v1");
   const userPublicKey = userCurve.generateKeys();
   const userAuth = crypto.randomBytes(16);
   const vapidKeys = generateVAPIDKeys();
 
   const VALID_KEYS = {
-    p256dh: userPublicKey.toString('base64url'),
-    auth: userAuth.toString('base64url')
+    p256dh: userPublicKey.toString("base64url"),
+    auth: userAuth.toString("base64url"),
   };
 
   const invalidRequests = [
     {
-      testTitle: '0 arguments',
+      testTitle: "0 arguments",
+      requestOptions: {},
+    },
+    {
+      testTitle: "No Endpoint",
       requestOptions: {
-
-      }
-    }, {
-      testTitle: 'No Endpoint',
-      requestOptions: {
-        subscription: {}
-      }
-    }, {
-      testTitle: 'Empty Endpoint',
-      requestOptions: {
-        subscription: {
-          endpoint: ''
-        }
-      }
-    }, {
-      testTitle: 'Array for Endpoint',
+        subscription: {},
+      },
+    },
+    {
+      testTitle: "Empty Endpoint",
       requestOptions: {
         subscription: {
-          endpoint: []
-        }
-      }
-    }, {
-      testTitle: 'Object for Endpoint',
-      requestOptions: {
-        subscription: {
-          endpoint: {}
-        }
-      }
-    }, {
-      testTitle: 'Object for Endpoint',
-      requestOptions: {
-        subscription: {
-          endpoint: true
-        }
-      }
-    }, {
-      testTitle: 'Payload provided with no keys',
-      requestOptions: {
-        subscription: {
-          endpoint: true
+          endpoint: "",
         },
-        message: 'hello'
-      }
-    }, {
-      testTitle: 'Payload provided with invalid keys',
+      },
+    },
+    {
+      testTitle: "Array for Endpoint",
+      requestOptions: {
+        subscription: {
+          endpoint: [],
+        },
+      },
+    },
+    {
+      testTitle: "Object for Endpoint",
+      requestOptions: {
+        subscription: {
+          endpoint: {},
+        },
+      },
+    },
+    {
+      testTitle: "Object for Endpoint",
       requestOptions: {
         subscription: {
           endpoint: true,
-          keys: 'silly example'
         },
-        message: 'hello'
-      }
-    }, {
-      testTitle: 'Payload provided with only p256dh keys',
+      },
+    },
+    {
+      testTitle: "Payload provided with no keys",
       requestOptions: {
         subscription: {
           endpoint: true,
-          keys: {
-            p256dh: userPublicKey.toString('base64url')
-          }
         },
-        message: 'hello'
-      }
-    }, {
-      testTitle: 'Payload provided with only auth keys',
+        message: "hello",
+      },
+    },
+    {
+      testTitle: "Payload provided with invalid keys",
+      requestOptions: {
+        subscription: {
+          endpoint: true,
+          keys: "silly example",
+        },
+        message: "hello",
+      },
+    },
+    {
+      testTitle: "Payload provided with only p256dh keys",
       requestOptions: {
         subscription: {
           endpoint: true,
           keys: {
-            auth: userAuth.toString('base64url')
-          }
+            p256dh: userPublicKey.toString("base64url"),
+          },
         },
-        message: 'hello'
-      }
-    }, {
-      testTitle: 'userPublicKey argument isn\'t a string',
+        message: "hello",
+      },
+    },
+    {
+      testTitle: "Payload provided with only auth keys",
+      requestOptions: {
+        subscription: {
+          endpoint: true,
+          keys: {
+            auth: userAuth.toString("base64url"),
+          },
+        },
+        message: "hello",
+      },
+    },
+    {
+      testTitle: "userPublicKey argument isn't a string",
       requestOptions: {
         subscription: {
           keys: {
             p256dh: userPublicKey,
-            auth: userAuth.toString('base64url')
-          }
+            auth: userAuth.toString("base64url"),
+          },
         },
-        message: 'hello'
-      },
-      addEndpoint: true
-    }, {
-      testTitle: 'userAuth argument isn\'t a string',
-      requestOptions: {
-        subscription: {
-          keys: {
-            p256dh: userPublicKey.toString('base64url'),
-            auth: userAuth
-          }
-        },
-        message: 'hello'
-      },
-      addEndpoint: true
-    }, {
-      testTitle: 'userPublicKey argument is too long',
-      requestOptions: {
-        subscription: {
-          keys: {
-            p256dh: Buffer.concat([userPublicKey, Buffer.alloc(1)]).toString('base64url'),
-            auth: userAuth.toString('base64url')
-          }
-        },
-        message: 'hello'
-      },
-      addEndpoint: true
-    }, {
-      testTitle: 'userPublicKey argument is too short',
-      requestOptions: {
-        subscription: {
-          keys: {
-            p256dh: userPublicKey.slice(1).toString('base64url'),
-            auth: userAuth.toString('base64url')
-          }
-        },
-        message: 'hello'
-      },
-      addEndpoint: true
-    }, {
-      testTitle: 'userAuth argument is too short',
-      requestOptions: {
-        subscription: {
-          keys: {
-            p256dh: userPublicKey.toString('base64url'),
-            auth: userAuth.slice(1).toString('base64url')
-          }
-        },
-        message: 'hello'
-      },
-      addEndpoint: true
-    }, {
-      testTitle: 'rejects when payload isn\'t a string or buffer',
-      requestOptions: {
-        subscription: {
-          keys: VALID_KEYS
-        },
-        message: []
+        message: "hello",
       },
       addEndpoint: true,
-      serverFlags: ['statusCode=404']
-    }, {
-      testTitle: 'send notification with invalid vapid option',
+    },
+    {
+      testTitle: "userAuth argument isn't a string",
       requestOptions: {
         subscription: {
-          keys: VALID_KEYS
+          keys: {
+            p256dh: userPublicKey.toString("base64url"),
+            auth: userAuth,
+          },
         },
-        message: 'hello',
+        message: "hello",
+      },
+      addEndpoint: true,
+    },
+    {
+      testTitle: "userPublicKey argument is too long",
+      requestOptions: {
+        subscription: {
+          keys: {
+            p256dh: Buffer.concat([userPublicKey, Buffer.alloc(1)]).toString("base64url"),
+            auth: userAuth.toString("base64url"),
+          },
+        },
+        message: "hello",
+      },
+      addEndpoint: true,
+    },
+    {
+      testTitle: "userPublicKey argument is too short",
+      requestOptions: {
+        subscription: {
+          keys: {
+            p256dh: userPublicKey.slice(1).toString("base64url"),
+            auth: userAuth.toString("base64url"),
+          },
+        },
+        message: "hello",
+      },
+      addEndpoint: true,
+    },
+    {
+      testTitle: "userAuth argument is too short",
+      requestOptions: {
+        subscription: {
+          keys: {
+            p256dh: userPublicKey.toString("base64url"),
+            auth: userAuth.slice(1).toString("base64url"),
+          },
+        },
+        message: "hello",
+      },
+      addEndpoint: true,
+    },
+    {
+      testTitle: "rejects when payload isn't a string or buffer",
+      requestOptions: {
+        subscription: {
+          keys: VALID_KEYS,
+        },
+        message: [],
+      },
+      addEndpoint: true,
+      serverFlags: ["statusCode=404"],
+    },
+    {
+      testTitle: "send notification with invalid vapid option",
+      requestOptions: {
+        subscription: {
+          keys: VALID_KEYS,
+        },
+        message: "hello",
         addEndpoint: true,
         extraOptions: {
           vapid: {
-            subject: 'mailto:mozilla@example.org',
+            subject: "mailto:mozilla@example.org",
             privateKey: vapidKeys.privateKey,
-            publicKey: vapidKeys.publicKey
-          }
-        }
-      }
-    }, {
-      testTitle: 'duplicated headers',
+            publicKey: vapidKeys.publicKey,
+          },
+        },
+      },
+    },
+    {
+      testTitle: "duplicated headers",
       requestOptions: {
         subscription: {
-          keys: VALID_KEYS
+          keys: VALID_KEYS,
         },
-        message: 'hello',
+        message: "hello",
         addEndpoint: true,
         extraOptions: {
           TTL: 100,
           headers: {
-            'TTL': 900
-          }
-        }
-      }
-    }, {
-      testTitle: 'invalid agent',
+            TTL: 900,
+          },
+        },
+      },
+    },
+    {
+      testTitle: "invalid agent",
       requestOptions: {
         subscription: {
-          keys: VALID_KEYS
+          keys: VALID_KEYS,
         },
-        message: 'hello',
+        message: "hello",
         addEndpoint: true,
         extraOptions: {
-          agent: 'agent'
-        }
-      }
-    }, {
-      testTitle: 'ignore valid agent if proxy denifed',
+          agent: "agent",
+        },
+      },
+    },
+    {
+      testTitle: "ignore valid agent if proxy denifed",
       requestOptions: {
         subscription: {
-          keys: VALID_KEYS
+          keys: VALID_KEYS,
         },
-        message: 'hello',
+        message: "hello",
         addEndpoint: true,
         extraOptions: {
           agent: new https.Agent({ keepAlive: true }),
-          proxy: 'http://localhost:3000'
-        }
-      }
-    }
+          proxy: "http://localhost:3000",
+        },
+      },
+    },
   ];
 
-  invalidRequests.forEach(function(invalidRequest) {
-    test(invalidRequest.testTitle, function() {
+  invalidRequests.forEach(function (invalidRequest) {
+    test(invalidRequest.testTitle, function () {
       if (invalidRequest.addEndpoint) {
-        invalidRequest.requestOptions.subscription.endpoint = 'https://127.0.0.1:8080';
+        invalidRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:8080";
       }
 
       if (invalidRequest.serverFlags) {
-        invalidRequest.requestOptions.subscription.endpoint += '?'
-        + invalidRequest.serverFlags.join('&');
+        invalidRequest.requestOptions.subscription.endpoint +=
+          "?" + invalidRequest.serverFlags.join("&");
       }
 
-      assert.throws(function() {
+      assert.throws(function () {
         return generateRequestDetails(
           invalidRequest.requestOptions.subscription,
           invalidRequest.requestOptions.message,
-          invalidRequest.requestOptions.extraOptions
+          invalidRequest.requestOptions.extraOptions,
         );
       });
     });
   });
 
-  test('Extra headers', function() {
-    let subscription = { endpoint: 'https://127.0.0.1:8080' };
+  test("Extra headers", function () {
+    let subscription = { endpoint: "https://127.0.0.1:8080" };
     let message;
     let extraOptions = {
       TTL: 100,
       headers: {
-        'Topic': 'topic',
-        'Urgency': 'normal'
-      }
+        Topic: "topic",
+        Urgency: "normal",
+      },
     };
-    let details = generateRequestDetails(
-      subscription,
-      message,
-      extraOptions
-    );
+    let details = generateRequestDetails(subscription, message, extraOptions);
     assert.equal(details.headers.TTL, extraOptions.TTL);
     assert.equal(details.headers.Topic, extraOptions.headers.Topic);
     assert.equal(details.headers.Urgency, extraOptions.headers.Urgency);
   });
 
-  test('Audience contains port with aes128gcm', function() {
+  test("Audience contains port with aes128gcm", function () {
     const subscription = {
-      endpoint: 'http://example.com:4242/life-universe-and-everything'
+      endpoint: "http://example.com:4242/life-universe-and-everything",
     };
 
     const extraOptions = {
       vapidDetails: {
-        subject: 'mailto:example@example.com',
+        subject: "mailto:example@example.com",
         publicKey: vapidKeys.publicKey,
-        privateKey: vapidKeys.privateKey
-      }
+        privateKey: vapidKeys.privateKey,
+      },
     };
 
     const requestDetails = generateRequestDetails(subscription, null, extraOptions);
@@ -295,22 +308,22 @@ describe('Test Generate Request Details', function() {
     const decodedContents = jws.decode(jwtContents);
     const audience = decodedContents.payload.aud;
 
-    assert.ok(audience, 'Audience exists');
-    assert.equal(audience, 'http://example.com:4242', 'Audience contains expected value with port');
+    assert.ok(audience, "Audience exists");
+    assert.equal(audience, "http://example.com:4242", "Audience contains expected value with port");
   });
 
-  test('Audience contains port with aesgcm', function() {
+  test("Audience contains port with aesgcm", function () {
     const subscription = {
-      endpoint: 'http://example.com:4242/life-universe-and-everything'
+      endpoint: "http://example.com:4242/life-universe-and-everything",
     };
 
     const extraOptions = {
       vapidDetails: {
-        subject: 'mailto:example@example.com',
+        subject: "mailto:example@example.com",
         publicKey: vapidKeys.publicKey,
-        privateKey: vapidKeys.privateKey
+        privateKey: vapidKeys.privateKey,
       },
-      contentEncoding: 'aesgcm'
+      contentEncoding: "aesgcm",
     };
 
     const requestDetails = generateRequestDetails(subscription, null, extraOptions);
@@ -323,52 +336,40 @@ describe('Test Generate Request Details', function() {
     const decodedContents = jws.decode(jwtContents);
     const audience = decodedContents.payload.aud;
 
-    assert.ok(audience, 'Audience exists');
-    assert.equal(audience, 'http://example.com:4242', 'Audience contains expected value with port');
+    assert.ok(audience, "Audience exists");
+    assert.equal(audience, "http://example.com:4242", "Audience contains expected value with port");
   });
 
-  test('Proxy option', function() {
-    let subscription = { endpoint: 'https://127.0.0.1:8080' };
+  test("Proxy option", function () {
+    let subscription = { endpoint: "https://127.0.0.1:8080" };
     let message;
     let extraOptions = {
-      'proxy': 'proxy'
+      proxy: "proxy",
     };
-    let details = generateRequestDetails(
-      subscription,
-      message,
-      extraOptions
-    );
+    let details = generateRequestDetails(subscription, message, extraOptions);
     assert.equal(details.proxy, extraOptions.proxy);
   });
 
-  test('Proxy option as an object', function() {
+  test("Proxy option as an object", function () {
     let subscription = {
-      endpoint: 'https://127.0.0.1:8080'
+      endpoint: "https://127.0.0.1:8080",
     };
-    let proxyOption = urlParse('http://proxy');
+    let proxyOption = urlParse("http://proxy");
     let extraOptions = {
-      proxy: proxyOption
+      proxy: proxyOption,
     };
-    let details = generateRequestDetails(
-      subscription,
-      null,
-      extraOptions
-    );
+    let details = generateRequestDetails(subscription, null, extraOptions);
     assert.equal(details.proxy, extraOptions.proxy);
   });
 
-  test('Agent option as an https.Agent instance', function() {
+  test("Agent option as an https.Agent instance", function () {
     let subscription = {
-      endpoint: 'https://127.0.0.1:8080'
+      endpoint: "https://127.0.0.1:8080",
     };
     let extraOptions = {
-      agent: new https.Agent({ keepAlive: true })
+      agent: new https.Agent({ keepAlive: true }),
     };
-    let details = generateRequestDetails(
-      subscription,
-      null,
-      extraOptions
-    );
+    let details = generateRequestDetails(subscription, null, extraOptions);
     assert.equal(details.agent, extraOptions.agent);
   });
 });

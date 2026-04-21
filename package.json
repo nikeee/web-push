@@ -21,8 +21,8 @@
   "files": [
     "dist"
   ],
-  "main": "dist/index.mjs",
   "type": "module",
+  "main": "dist/index.mjs",
   "scripts": {
     "build": "tsdown",
     "prepublishOnly": "tsdown",

@@ -1,56 +1,60 @@
-import * as crypto from 'node:crypto';
-import * as ece from 'http_ece';
+import * as crypto from "node:crypto";
+import * as ece from "http_ece";
 
-export function encrypt(userPublicKey: string, userAuth: string, payload: string | Buffer, contentEncoding: string): { localPublicKey: Buffer, salt: string, cipherText: Buffer } {
+export function encrypt(
+  userPublicKey: string,
+  userAuth: string,
+  payload: string | Buffer,
+  contentEncoding: string,
+): { localPublicKey: Buffer; salt: string; cipherText: Buffer } {
   if (!userPublicKey) {
-    throw new Error('No user public key provided for encryption.');
+    throw new Error("No user public key provided for encryption.");
   }
 
-  if (typeof userPublicKey !== 'string') {
-    throw new Error('The subscription p256dh value must be a string.');
+  if (typeof userPublicKey !== "string") {
+    throw new Error("The subscription p256dh value must be a string.");
   }
 
-  if (Buffer.from(userPublicKey, 'base64url').length !== 65) {
-    throw new Error('The subscription p256dh value should be 65 bytes long.');
+  if (Buffer.from(userPublicKey, "base64url").length !== 65) {
+    throw new Error("The subscription p256dh value should be 65 bytes long.");
   }
 
   if (!userAuth) {
-    throw new Error('No user auth provided for encryption.');
+    throw new Error("No user auth provided for encryption.");
   }
 
-  if (typeof userAuth !== 'string') {
-    throw new Error('The subscription auth key must be a string.');
+  if (typeof userAuth !== "string") {
+    throw new Error("The subscription auth key must be a string.");
   }
 
-  if (Buffer.from(userAuth, 'base64url').length < 16) {
-    throw new Error('The subscription auth key should be at least 16 '
-    + 'bytes long');
+  if (Buffer.from(userAuth, "base64url").length < 16) {
+    throw new Error("The subscription auth key should be at least 16 " + "bytes long");
   }
 
-  if (typeof payload !== 'string' && !Buffer.isBuffer(payload)) {
-    throw new Error('Payload must be either a string or a Node Buffer.');
+  if (typeof payload !== "string" && !Buffer.isBuffer(payload)) {
+    throw new Error("Payload must be either a string or a Node Buffer.");
   }
 
-  if (typeof payload === 'string' || payload instanceof String) {
+  if (typeof payload === "string" || payload instanceof String) {
     payload = Buffer.from(payload);
   }
 
-  const localCurve = crypto.createECDH('prime256v1');
+  const localCurve = crypto.createECDH("prime256v1");
   const localPublicKey = localCurve.generateKeys();
 
-  const salt = crypto.randomBytes(16).toString('base64url');
+  const salt = crypto.randomBytes(16).toString("base64url");
 
   const cipherText = ece.encrypt(payload, {
     version: contentEncoding,
     dh: userPublicKey,
     privateKey: localCurve,
     salt: salt,
-    authSecret: userAuth
+    authSecret: userAuth,
   });
 
   return {
     localPublicKey: localPublicKey,
     salt: salt,
-    cipherText: cipherText
+    cipherText: cipherText,
   };
 }

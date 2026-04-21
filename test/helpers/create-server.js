@@ -5,15 +5,15 @@ import * as path from "node:path";
 import * as portfinder from "portfinder";
 
 export default function createServer() {
-  const demoPath = 'test/data/demo';
+  const demoPath = "test/data/demo";
 
-  const server = http.createServer(function(req, res) {
+  const server = http.createServer(function (req, res) {
     try {
-      if (req.method === 'GET') {
+      if (req.method === "GET") {
         // Ignore query parameters which are used to inject application keys
-        const urlParts = req.url.split('?');
-        if (urlParts[0] === '/') {
-          req.url = '/index.html';
+        const urlParts = req.url.split("?");
+        if (urlParts[0] === "/") {
+          req.url = "/index.html";
         }
 
         if (!fs.existsSync(demoPath + req.url)) {
@@ -25,21 +25,22 @@ export default function createServer() {
         const data = fs.readFileSync(demoPath + req.url);
 
         res.writeHead(200, {
-          'Content-Length': data.length,
-          'Content-Type': path.extname(req.url) === '.html' ? 'text/html' : 'application/javascript'
+          "Content-Length": data.length,
+          "Content-Type":
+            path.extname(req.url) === ".html" ? "text/html" : "application/javascript",
         });
         res.end(data);
       } else {
-        throw new Error('Unable to handle post requests.');
+        throw new Error("Unable to handle post requests.");
       }
     } catch (err) {
-      console.error('An error occured handling request.', err);
+      console.error("An error occured handling request.", err);
       res.writeHead(404);
-      res.end('bad request.');
+      res.end("bad request.");
     }
   });
 
-  portfinder.getPort(function(err, port) {
+  portfinder.getPort(function (err, port) {
     if (err) {
       server.port = 50005;
     } else {
@@ -48,10 +49,9 @@ export default function createServer() {
     server.listen(server.port);
   });
 
-  return new Promise(function(resolve) {
-    server.on('listening', function() {
+  return new Promise(function (resolve) {
+    server.on("listening", function () {
       resolve(server);
     });
   });
 }
-
