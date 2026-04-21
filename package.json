@@ -40,6 +40,7 @@
     "jws": "^4.0.1"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
     "chromedriver": "123.0.3",
     "geckodriver": "4.3.0",
     "nyc": "15.1.0",

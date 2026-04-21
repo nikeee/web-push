@@ -13,7 +13,8 @@
 
     "strict": true,
 
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "typedocOptions": {
     "entryPoints": ["src/index.ts"],
