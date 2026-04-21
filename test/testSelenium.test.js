@@ -1,17 +1,10 @@
 import * as assert from "node:assert";
-import * as fs from "node:fs";
-import { describe, test, beforeEach, afterEach } from "node:test";
+import { describe, test } from "node:test";
 
-import * as seleniumAssistant from "selenium-assistant";
-import * as webdriver from "selenium-webdriver";
-import * as seleniumFirefox from "selenium-webdriver/firefox";
+import { chromium, firefox } from "playwright";
 
-import * as webPush from "../src/index.ts";
+import * as webPush from "../src/index.js";
 import createServer from "./helpers/create-server.js";
-
-// We need geckodriver on the path
-import "geckodriver";
-import "chromedriver";
 
 const vapidKeys = webPush.generateVAPIDKeys();
 
@@ -21,238 +14,121 @@ const VAPID_PARAM = {
   privateKey: vapidKeys.privateKey,
   publicKey: vapidKeys.publicKey,
 };
-const testDirectory = "./test/output/";
 
 webPush.setGCMAPIKey("AIzaSyAwmdX6KKd4hPfIcGU2SOfj9vuRDW6u-wo");
 
-let globalServer;
-let globalDriver;
-let testServerURL;
-
-function runTest(browser, options) {
+async function runTest(browserType, options) {
   options = options || {};
 
-  if (process.env.CI) {
-    return Promise.resolve();
-  }
+  const server = await createServer(options, webPush);
+  const testServerURL = "http://127.0.0.1:" + server.port;
 
-  return createServer(options, webPush)
-    .then(function (server) {
-      globalServer = server;
-      testServerURL = "http://127.0.0.1:" + server.port;
+  const browser = await browserType.launch({ headless: true });
+  try {
+    const context = await browser.newContext();
+    await context.grantPermissions(["notifications"], { origin: testServerURL });
 
-      if (browser.getId() === "firefox") {
-        // This is based off of: https://bugzilla.mozilla.org/show_bug.cgi?id=1275521
-        // Unfortunately it doesn't seem to work :(
-        const ffProfile = new seleniumFirefox.Profile();
-        ffProfile.setPreference("dom.push.testing.ignorePermission", true);
-        ffProfile.setPreference("notification.prompt.testing", true);
-        ffProfile.setPreference("notification.prompt.testing.allow", true);
-        browser.getSeleniumOptions().setProfile(ffProfile);
-      } else if (browser.getId() === "chrome") {
-        const chromeOperaPreferences = {
-          profile: {
-            content_settings: {
-              exceptions: {
-                notifications: {},
-              },
-            },
-          },
-        };
-        chromeOperaPreferences.profile.content_settings.exceptions.notifications[
-          testServerURL + ",*"
-        ] = {
-          setting: 1,
-        };
-        /* eslint-enable camelcase */
+    const page = await context.newPage();
 
-        // Write to a file
-        const tempPreferenceDir = "./test/output/temp/chromeOperaPreferences";
-        fs.mkdirSync(tempPreferenceDir + "/Default", { recursive: true });
+    let url = testServerURL;
+    if (options.vapid) {
+      url += "?vapid=" + options.vapid.publicKey;
+    }
 
-        // NOTE: The Default part of this path might be Chrome specific.
-        fs.writeFileSync(
-          tempPreferenceDir + "/Default/Preferences",
-          JSON.stringify(chromeOperaPreferences),
-        );
+    await page.goto(url);
 
-        const seleniumOptions = browser.getSeleniumOptions();
-        seleniumOptions.addArguments("user-data-dir=" + tempPreferenceDir + "/");
-      }
+    const serviceWorkerSupported = await page.evaluate(
+      () => typeof navigator.serviceWorker !== "undefined",
+    );
+    assert(serviceWorkerSupported);
 
-      return browser.getSeleniumDriver();
-    })
-    .then(function (driver) {
-      globalDriver = driver;
-
-      if (options.vapid) {
-        testServerURL += "?vapid=" + options.vapid.publicKey;
-      }
-
-      return globalDriver
-        .get(testServerURL)
-        .then(function () {
-          return globalDriver.executeScript(function () {
-            return typeof navigator.serviceWorker !== "undefined";
-          });
-        })
-        .then(function (serviceWorkerSupported) {
-          assert(serviceWorkerSupported);
-        })
-        .then(function () {
-          return globalDriver.wait(function () {
-            return globalDriver.executeScript(function () {
-              return typeof window.subscribeSuccess !== "undefined";
-            });
-          });
-        })
-        .then(function () {
-          return globalDriver.executeScript(function () {
-            if (!window.subscribeSuccess) {
-              return window.subscribeError;
-            }
-
-            return null;
-          });
-        })
-        .then(function (subscribeError) {
-          if (subscribeError) {
-            console.log("subscribeError: ", subscribeError);
-            throw subscribeError;
-          }
-
-          return globalDriver.executeScript(function () {
-            return window.testSubscription;
-          });
-        })
-        .then(function (subscription) {
-          if (!subscription) {
-            throw new Error("No subscription found.");
-          }
-
-          subscription = JSON.parse(subscription);
-
-          let promise;
-          let pushPayload = null;
-          let vapid = null;
-          let contentEncoding = null;
-          if (options) {
-            pushPayload = options.payload;
-            vapid = options.vapid;
-            contentEncoding = options.contentEncoding;
-          }
-
-          if (!pushPayload) {
-            promise = webPush.sendNotification(subscription, null, {
-              vapidDetails: vapid,
-              contentEncoding: contentEncoding,
-            });
-          } else {
-            if (!subscription.keys) {
-              throw new Error("Require subscription.keys not found.");
-            }
-
-            promise = webPush.sendNotification(subscription, pushPayload, {
-              vapidDetails: vapid,
-              contentEncoding: contentEncoding,
-            });
-          }
-
-          return promise.then(function (response) {
-            if (response.length > 0) {
-              const data = JSON.parse(response);
-              if (typeof data.failure !== "undefined" && data.failure > 0) {
-                throw new Error("Bad GCM Response: " + response);
-              }
-            }
-          });
-        })
-        .then(function () {
-          const expectedTitle = options.payload ? options.payload : "no payload";
-          return globalDriver.wait(function () {
-            return webdriver.until.titleIs(expectedTitle, 60000);
-          });
-        });
+    await page.waitForFunction(() => typeof window.subscribeSuccess !== "undefined", null, {
+      timeout: 60000,
     });
+
+    const subscribeError = await page.evaluate(() => {
+      if (!window.subscribeSuccess) {
+        return window.subscribeError;
+      }
+      return null;
+    });
+
+    if (subscribeError) {
+      console.log("subscribeError: ", subscribeError);
+      throw new Error(typeof subscribeError === "string" ? subscribeError : JSON.stringify(subscribeError));
+    }
+
+    const subscriptionJSON = await page.evaluate(() => window.testSubscription);
+    if (!subscriptionJSON) {
+      throw new Error("No subscription found.");
+    }
+
+    const subscription = JSON.parse(subscriptionJSON);
+
+    const pushPayload = options.payload || null;
+    const vapid = options.vapid || null;
+    const contentEncoding = options.contentEncoding || null;
+
+    if (pushPayload && !subscription.keys) {
+      throw new Error("Require subscription.keys not found.");
+    }
+
+    const response = await webPush.sendNotification(subscription, pushPayload, {
+      vapidDetails: vapid,
+      contentEncoding: contentEncoding,
+    });
+
+    if (response.length > 0) {
+      const data = JSON.parse(response);
+      if (typeof data.failure !== "undefined" && data.failure > 0) {
+        throw new Error("Bad GCM Response: " + response);
+      }
+    }
+
+    const expectedTitle = options.payload ? options.payload : "no payload";
+    await page.waitForFunction(
+      (title) => document.title === title,
+      expectedTitle,
+      { timeout: 60000 },
+    );
+  } finally {
+    await browser.close();
+    server.close();
+  }
 }
 
-seleniumAssistant.printAvailableBrowserInfo();
+const browsers = [
+  { name: "Chromium", type: chromium },
+  { name: "Firefox", type: firefox },
+];
 
-const availableBrowsers = seleniumAssistant.getLocalBrowsers();
-availableBrowsers.forEach(function (browser) {
-  if (browser.getId() !== "chrome" && browser.getId() !== "firefox") {
-    return;
-  }
-
-  describe("Selenium " + browser.getPrettyName(), function () {
-    beforeEach(function () {
-      globalServer = null;
-
-      return fs.promises.rm(testDirectory, { recursive: true, force: true });
-    });
-
-    afterEach(function () {
-      return seleniumAssistant
-        .killWebDriver(globalDriver)
-        .catch(function (err) {
-          console.log("Error killing web driver: ", err);
-        })
-        .then(function () {
-          globalDriver = null;
-
-          return fs.promises
-            .rm(testDirectory, { recursive: true, force: true })
-            .catch(function () {
-              console.warn(
-                "Unable to delete test directory, going to wait 2 " + "seconds and try again",
-              );
-              // Add a timeout so that if the browser
-              // changes any files in the test directory
-              // it doesn't cause fs.promises.rm to throw an error
-              // (i.e. rm checks files in directory, deletes them
-              // while another process adds a file, then rm fails
-              // to remove a non-empty directory).
-              return new Promise(function (resolve) {
-                setTimeout(resolve, 2000);
-              });
-            })
-            .then(function () {
-              return fs.promises.rm(testDirectory, { recursive: true, force: true });
-            });
-        })
-        .then(function () {
-          if (globalServer) {
-            globalServer.close();
-            globalServer = null;
-          }
-        });
-    });
-
+for (const { name, type } of browsers) {
+  describe(`Playwright ${name}`, function () {
     test(
-      "send/receive notification without payload with " + browser.getPrettyName() + " (aesgcm)",
+      `send/receive notification without payload with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
         });
       },
     );
 
     test(
-      "send/receive notification without payload with " + browser.getPrettyName() + " (aes128gcm)",
+      `send/receive notification without payload with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
         });
       },
     );
 
     test(
-      "send/receive notification with payload with " + browser.getPrettyName() + " (aesgcm)",
+      `send/receive notification with payload with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           payload: "marco",
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
         });
@@ -260,10 +136,10 @@ availableBrowsers.forEach(function (browser) {
     );
 
     test(
-      "send/receive notification with payload with " + browser.getPrettyName() + " (aes128gcm)",
+      `send/receive notification with payload with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           payload: "marco",
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
         });
@@ -271,10 +147,10 @@ availableBrowsers.forEach(function (browser) {
     );
 
     test(
-      "send/receive notification with vapid with " + browser.getPrettyName() + " (aesgcm)",
+      `send/receive notification with vapid with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
         });
@@ -282,10 +158,10 @@ availableBrowsers.forEach(function (browser) {
     );
 
     test(
-      "send/receive notification with vapid with " + browser.getPrettyName() + " (aes128gcm)",
+      `send/receive notification with vapid with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
         });
@@ -293,12 +169,10 @@ availableBrowsers.forEach(function (browser) {
     );
 
     test(
-      "send/receive notification with payload & vapid with " +
-        browser.getPrettyName() +
-        " (aesgcm)",
+      `send/receive notification with payload & vapid with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           payload: "marco",
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
@@ -307,12 +181,10 @@ availableBrowsers.forEach(function (browser) {
     );
 
     test(
-      "send/receive notification with payload & vapid with " +
-        browser.getPrettyName() +
-        " (aes128gcm)",
+      `send/receive notification with payload & vapid with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      function () {
-        return runTest(browser, {
+      async function () {
+        await runTest(type, {
           payload: "marco",
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
@@ -320,4 +192,4 @@ availableBrowsers.forEach(function (browser) {
       },
     );
   });
-});
+}
