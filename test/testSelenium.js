@@ -199,7 +199,7 @@ availableBrowsers.forEach(function(browser) {
       .then(function() {
         globalDriver = null;
 
-        return del(testDirectory)
+        return fs.promises.rm(testDirectory, { recursive: true, force: true })
         .catch(function() {
           console.warn('Unable to delete test directory, going to wait 2 '
           + 'seconds and try again');
@@ -214,7 +214,7 @@ availableBrowsers.forEach(function(browser) {
           });
         })
         .then(function() {
-          return del(testDirectory);
+          return fs.promises.rm(testDirectory, { recursive: true, force: true });
         });
       })
       .then(function() {
