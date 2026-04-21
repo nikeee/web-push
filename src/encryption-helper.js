@@ -1,6 +1,13 @@
 import * as crypto from 'node:crypto';
 const ece = require('http_ece');
 
+/**
+ * @param {string} userPublicKey - The subscription's public key (p256dh), base64url-encoded.
+ * @param {string} userAuth - The subscription's auth secret, base64url-encoded.
+ * @param {string | Buffer} payload - The message payload to encrypt.
+ * @param {string} contentEncoding - The content encoding to use (e.g. 'aes128gcm' or 'aesgcm').
+ * @returns {{ localPublicKey: Buffer, salt: string, cipherText: Buffer }}
+ */
 export function encrypt(userPublicKey, userAuth, payload, contentEncoding) {
   if (!userPublicKey) {
     throw new Error('No user public key provided for encryption.');

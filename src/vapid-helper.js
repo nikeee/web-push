@@ -26,6 +26,10 @@ const ECPrivateKeyASN = asn1.define('ECPrivateKey', function() {
   );
 });
 
+/**
+ * @param {Buffer} key - The raw private key bytes.
+ * @returns {string} The PEM-encoded EC private key.
+ */
 function toPEM(key) {
   return ECPrivateKeyASN.encode({
     version: 1,
@@ -36,6 +40,10 @@ function toPEM(key) {
   });
 }
 
+/**
+ * Generate a new VAPID key pair.
+ * @returns {{ publicKey: string, privateKey: string }} The base64url-encoded public and private keys.
+ */
 export function generateVAPIDKeys() {
   const curve = crypto.createECDH('prime256v1');
   curve.generateKeys();
@@ -64,6 +72,9 @@ export function generateVAPIDKeys() {
   };
 }
 
+/**
+ * @param {string} subject - The VAPID subject (an https: URL or mailto: address).
+ */
 export function validateSubject(subject) {
   if (!subject) {
     throw new Error('No subject set in vapidDetails.subject.');
@@ -90,6 +101,9 @@ export function validateSubject(subject) {
     }
 }
 
+/**
+ * @param {string} publicKey - The VAPID public key, base64url-encoded.
+ */
 export function validatePublicKey(publicKey) {
   if (!publicKey) {
     throw new Error('No key set vapidDetails.publicKey');
@@ -111,6 +125,9 @@ export function validatePublicKey(publicKey) {
   }
 }
 
+/**
+ * @param {string} privateKey - The VAPID private key, base64url-encoded.
+ */
 export function validatePrivateKey(privateKey) {
   if (!privateKey) {
     throw new Error('No key set in vapidDetails.privateKey');
