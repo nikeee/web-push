@@ -1,13 +1,14 @@
 import { describe, test } from "node:test";
 import * as assert from "node:assert";
-import { parse as urlParse } from "node:url";
 import * as crypto from "node:crypto";
-import * as https from "node:https";
 
 import * as jws from "jws";
 
-import { generateRequestDetails } from "../src/index.ts";
+import webPushModule from "../src/index.ts";
 import { generateVAPIDKeys } from "../src/vapid-helper.ts";
+
+const lib = new webPushModule.WebPushLib();
+const generateRequestDetails = lib.generateRequestDetails.bind(lib);
 
 describe("Test Generate Request Details", () => {
   test("is defined", () => {
@@ -219,33 +220,6 @@ describe("Test Generate Request Details", () => {
         },
       },
     },
-    {
-      testTitle: "invalid agent",
-      requestOptions: {
-        subscription: {
-          keys: VALID_KEYS,
-        },
-        message: "hello",
-        addEndpoint: true,
-        extraOptions: {
-          agent: "agent",
-        },
-      },
-    },
-    {
-      testTitle: "ignore valid agent if proxy denifed",
-      requestOptions: {
-        subscription: {
-          keys: VALID_KEYS,
-        },
-        message: "hello",
-        addEndpoint: true,
-        extraOptions: {
-          agent: new https.Agent({ keepAlive: true }),
-          proxy: "http://localhost:3000",
-        },
-      },
-    },
   ];
 
   invalidRequests.forEach(invalidRequest => {
@@ -340,36 +314,26 @@ describe("Test Generate Request Details", () => {
     assert.equal(audience, "http://example.com:4242", "Audience contains expected value with port");
   });
 
-  test("Proxy option", () => {
-    let subscription = { endpoint: "https://127.0.0.1:8080" };
-    let message;
-    let extraOptions = {
-      proxy: "proxy",
-    };
-    let details = generateRequestDetails(subscription, message, extraOptions);
-    assert.equal(details.proxy, extraOptions.proxy);
-  });
-
-  test("Proxy option as an object", () => {
-    let subscription = {
-      endpoint: "https://127.0.0.1:8080",
-    };
-    let proxyOption = urlParse("http://proxy");
-    let extraOptions = {
-      proxy: proxyOption,
-    };
-    let details = generateRequestDetails(subscription, null, extraOptions);
-    assert.equal(details.proxy, extraOptions.proxy);
-  });
-
-  test("Agent option as an https.Agent instance", () => {
+  test("Dispatcher option", () => {
     let subscription = {
       endpoint: "https://127.0.0.1:8080",
     };
     let extraOptions = {
-      agent: new https.Agent({ keepAlive: true }),
+      dispatcher: { custom: true },
     };
     let details = generateRequestDetails(subscription, null, extraOptions);
-    assert.equal(details.agent, extraOptions.agent);
+    assert.equal(details.dispatcher, extraOptions.dispatcher);
+  });
+
+  test("Signal option", () => {
+    let subscription = {
+      endpoint: "https://127.0.0.1:8080",
+    };
+    const signal = AbortSignal.timeout(5000);
+    let extraOptions = {
+      signal,
+    };
+    let details = generateRequestDetails(subscription, null, extraOptions);
+    assert.equal(details.signal, signal);
   });
 });

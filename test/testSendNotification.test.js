@@ -10,16 +10,16 @@ import * as portfinder from "portfinder";
 
 import * as WebPushConstants from "../src/web-push-constants.ts";
 import { generateVAPIDKeys } from "../src/vapid-helper.ts";
+import * as webPush from "../src/index.ts";
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+const _lib = new webPush.WebPushLib();
 
 describe("sendNotification", () => {
-  let sendNotification;
-  let setGCMAPIKey;
-  let setVapidDetails;
-
-  beforeEach(() => {
-    ({ sendNotification, setGCMAPIKey, setVapidDetails } = require("../src/index"));
-  });
-
+  const sendNotification = _lib.sendNotification.bind(_lib);
+  const setGCMAPIKey = _lib.setGCMAPIKey.bind(_lib);
+  const setVapidDetails = _lib.setVapidDetails.bind(_lib);
   test("is defined", () => {
     assert(sendNotification);
   });
@@ -30,25 +30,9 @@ describe("sendNotification", () => {
   let requestBody;
   let requestDetails;
 
-  const originalHTTPSRequest = https.request;
-
-  // https request mock to accept self-signed certificate.
-  // Probably worth switching with proxyquire and sinon.
-  const certHTTPSRequest = (options, listener) => {
-    options.rejectUnauthorized = false;
-    return originalHTTPSRequest.call(https, options, listener);
-  };
-
   beforeEach(() => {
     requestBody = null;
     requestDetails = null;
-
-    // Delete caches of web push libs to start clean between test runs
-    // delete require.cache[path.join(__dirname, '..', 'src', 'index.js')];
-    // delete require.cache[path.join(__dirname, '..', 'src', 'web-push-lib.js')];
-
-    // Reset https request mock
-    https.request = certHTTPSRequest;
 
     let returnPromise = Promise.resolve();
     if (!server) {
@@ -59,6 +43,7 @@ describe("sendNotification", () => {
   });
 
   after(() => {
+    delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
     return closeServer();
   });
 
@@ -630,14 +615,14 @@ describe("sendNotification", () => {
 
   validGCMRequests.forEach(validGCMRequest => {
     test(validGCMRequest.testTitle, () => {
-      // This mocks out the httpsrequest used by web push.
-      // Probably worth switching with proxyquire and sinon.
-      https.request = (options, listener) => {
-        options.hostname = "127.0.0.1";
-        options.port = serverPort;
-        options.path = "/";
-
-        return certHTTPSRequest.call(https, options, listener);
+      // Mock fetch to redirect GCM/FCM requests to our local test server.
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (url, options) => {
+        const redirected = new URL(url);
+        redirected.hostname = "127.0.0.1";
+        redirected.port = serverPort.toString();
+        redirected.pathname = "/";
+        return originalFetch(redirected.toString(), options);
       };
 
       // Set the default endpoint if it's not already configured
@@ -672,6 +657,9 @@ describe("sendNotification", () => {
         })
         .then(() => {
           validateRequest(validGCMRequest);
+        })
+        .finally(() => {
+          globalThis.fetch = originalFetch;
         });
     });
   });

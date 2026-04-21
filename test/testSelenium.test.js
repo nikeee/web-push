@@ -3,7 +3,7 @@ import { describe, test } from "node:test";
 
 import { chromium, firefox } from "playwright";
 
-import * as webPush from "../src/index.js";
+import * as webPush from "../src/index.ts";
 import createServer from "./helpers/create-server.js";
 
 const vapidKeys = webPush.generateVAPIDKeys();
