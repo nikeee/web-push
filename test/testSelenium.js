@@ -3,7 +3,6 @@ const fs = require('node:fs');
 const seleniumAssistant = require('selenium-assistant');
 const webdriver = require('selenium-webdriver');
 const seleniumFirefox = require('selenium-webdriver/firefox');
-const mkdirp = require('mkdirp');
 const webPush = require('../src/index');
 const createServer = require('./helpers/create-server');
 
@@ -64,7 +63,7 @@ function runTest(browser, options) {
 
       // Write to a file
       const tempPreferenceDir = './test/output/temp/chromeOperaPreferences';
-      mkdirp.sync(tempPreferenceDir + '/Default');
+      fs.mkdirSync(tempPreferenceDir + '/Default', { recursive: true });
 
       // NOTE: The Default part of this path might be Chrome specific.
       fs.writeFileSync(tempPreferenceDir + '/Default/Preferences', JSON.stringify(chromeOperaPreferences));
