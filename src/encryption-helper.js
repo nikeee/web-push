@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+import * as crypto from 'node:crypto';
 const ece = require('http_ece');
 
 export function encrypt(userPublicKey, userAuth, payload, contentEncoding) {

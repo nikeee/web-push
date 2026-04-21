@@ -1,11 +1,11 @@
-const url = require('node:url');
-const https = require('node:https');
+import * as url from 'node:url';
+import * as https from 'node:https';
 
-const WebPushError = require('./web-push-error.js');
-const vapidHelper = require('./vapid-helper.js');
-const encryptionHelper = require('./encryption-helper.js');
-const webPushConstants = require('./web-push-constants.js');
-const urlBase64Helper = require('./urlsafe-base64-helper');
+import WebPushError from './WebPushError.js';
+import * as vapidHelper from './vapid-helper.js';
+import * as encryptionHelper from './encryption-helper.js';
+import * as webPushConstants from './web-push-constants.js';
+import * as urlBase64Helper from './urlsafe-base64-helper';
 
 // Default TTL is four weeks.
 const DEFAULT_TTL = 2419200;
