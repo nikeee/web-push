@@ -5,7 +5,6 @@ const webdriver = require('selenium-webdriver');
 const seleniumFirefox = require('selenium-webdriver/firefox');
 const assert = require('assert');
 const fs = require('fs');
-const del = require('del');
 const webPush = require('../src/index');
 const createServer = require('./helpers/create-server');
 
