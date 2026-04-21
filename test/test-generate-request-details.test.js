@@ -6,8 +6,8 @@ import * as https from "node:https";
 
 import * as jws from "jws";
 
-import { generateRequestDetails } from "../src/index.js";
-import { generateVAPIDKeys } from "../src/vapid-helper.js";
+import { generateRequestDetails } from "../src/index.ts";
+import { generateVAPIDKeys } from "../src/vapid-helper.ts";
 
 describe("Test Generate Request Details", function () {
   test("is defined", function () {

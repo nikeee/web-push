@@ -4,8 +4,8 @@ import { describe, test, beforeEach, after } from "node:test";
 
 import * as sinon from "sinon";
 
-import * as webPush from "../src/index.js";
-import * as vapidHelper from "../src/vapid-helper.js";
+import * as webPush from "../src/index.ts";
+import * as vapidHelper from "../src/vapid-helper.ts";
 
 const VALID_AUDIENCE = "https://example.com";
 const VALID_SUBJECT_MAILTO = "mailto:example@example.com";

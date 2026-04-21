@@ -1,7 +1,7 @@
 import * as assert from "node:assert";
 import { describe, test } from "node:test";
 
-import { setVapidDetails } from "../src/index.js";
+import { setVapidDetails } from "../src/index.ts";
 
 const VALID_SUBJECT_MAILTO = "mailto: example@example.com";
 const VALID_SUBJECT_URL = "https://exampe.com/contact";

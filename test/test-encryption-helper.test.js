@@ -4,7 +4,7 @@ import { describe, test } from "node:test";
 
 import * as ece from "http_ece";
 
-import * as webPush from "../src/index.js";
+import * as webPush from "../src/index.ts";
 
 const userCurve = crypto.createECDH("prime256v1");
 const VALID_PUBLIC_KEY = userCurve.generateKeys().toString("base64url");

@@ -8,8 +8,8 @@ import * as ece from "http_ece";
 import * as jws from "jws";
 import * as portfinder from "portfinder";
 
-import * as WebPushConstants from "../src/web-push-constants.js";
-import { generateVAPIDKeys } from "../src/vapid-helper.js";
+import * as WebPushConstants from "../src/web-push-constants.ts";
+import { generateVAPIDKeys } from "../src/vapid-helper.ts";
 
 describe("sendNotification", function () {
   let sendNotification;

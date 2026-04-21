@@ -6,7 +6,7 @@ import * as seleniumAssistant from "selenium-assistant";
 import * as webdriver from "selenium-webdriver";
 import * as seleniumFirefox from "selenium-webdriver/firefox";
 
-import * as webPush from "../src/index.js";
+import * as webPush from "../src/index.ts";
 import createServer from "./helpers/create-server.js";
 
 // We need geckodriver on the path
