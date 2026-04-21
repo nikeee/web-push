@@ -31,7 +31,7 @@
     "lint:fix": "oxlint --fix",
     "format": "oxfmt",
     "pretest": "npm run lint",
-    "test": "nyc --reporter=lcov --reporter=text node --test test/test*"
+    "test": "tsc && nyc --reporter=lcov --reporter=text node --test test/test*"
   },
   "dependencies": {
     "asn1.js": "^5.4.1",
