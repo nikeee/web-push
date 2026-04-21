@@ -1,10 +1,9 @@
 import * as http from "node:http";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { once } from "node:events";
 
-import * as portfinder from "portfinder";
-
-export default function createServer() {
+export default async function createServer() {
   const demoPath = "test/data/demo";
 
   const server = http.createServer((req, res) => {
@@ -40,18 +39,9 @@ export default function createServer() {
     }
   });
 
-  portfinder.getPort((err, port) => {
-    if (err) {
-      server.port = 50005;
-    } else {
-      server.port = port;
-    }
-    server.listen(server.port);
-  });
+  server.listen(0);
 
-  return new Promise(resolve => {
-    server.on("listening", () => {
-      resolve(server);
-    });
-  });
+  await once(server, "listening");
+  server.port = server.address().port;
+  return server;
 }

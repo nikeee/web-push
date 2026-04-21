@@ -2,11 +2,11 @@ import * as assert from "node:assert";
 import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import { describe, test, beforeEach, after } from "node:test";
+import { once } from "node:events";
 import * as https from "node:https";
 
 import * as ece from "http_ece";
 import * as jws from "jws";
-import * as portfinder from "portfinder";
 
 import * as WebPushConstants from "../src/web-push-constants.ts";
 import { generateVAPIDKeys } from "../src/vapid-helper.ts";
@@ -59,7 +59,7 @@ describe("sendNotification", () => {
 
   const vapidKeys = generateVAPIDKeys();
 
-  function startServer() {
+  async function startServer() {
     const options = {
       key: pem,
       cert: pem,
@@ -85,38 +85,25 @@ describe("sendNotification", () => {
       });
     });
 
-    portfinder.getPort((err, port) => {
-      if (err) {
-        serverPort = 50005;
-      } else {
-        serverPort = port;
-      }
+    server.listen(0);
 
-      server.listen(serverPort);
-    });
-
-    return new Promise(resolve => {
-      server.on("listening", resolve);
-    });
+    await once(server, "listening");
+    serverPort = server.address().port;
   }
 
-  function closeServer() {
+  async function closeServer() {
     serverPort = null;
-    return new Promise(resolve => {
-      if (!server) {
-        resolve();
-        return;
-      }
+    if (!server) {
+      return;
+    }
 
-      server.on("close", () => {
-        server = null;
-        resolve();
-      });
-      if (server.closeAllConnections) {
-        server.closeAllConnections();
-      }
-      server.close();
-    });
+    if (server.closeAllConnections) {
+      server.closeAllConnections();
+    }
+    server.close();
+
+    await once(server, "close");
+    server = null;
   }
 
   function validateRequest(request) {
