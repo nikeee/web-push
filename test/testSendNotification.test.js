@@ -70,7 +70,7 @@ describe('sendNotification', function() {
     auth: userAuth.toString('base64url')
   };
 
-  const vapidKeys = require('../src/vapid-helper').generateVAPIDKeys();
+  const vapidKeys = require('../src/vapid-helper.js').generateVAPIDKeys();
 
   function startServer() {
     const options = {
