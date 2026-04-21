@@ -34,15 +34,14 @@
     "test": "nyc --reporter=lcov --reporter=text mocha -- --ui tdd test/test*"
   },
   "dependencies": {
-    "asn1.js": "^5.3.0",
-    "http_ece": "1.2.0",
-    "https-proxy-agent": "^7.0.0",
-    "jws": "^4.0.0",
-    "minimist": "^1.2.5"
+    "asn1.js": "^5.4.1",
+    "http_ece": "1.2.1",
+    "https-proxy-agent": "^7.0.6",
+    "jws": "^4.0.1",
+    "minimist": "^1.2.8"
   },
   "devDependencies": {
     "chromedriver": "123.0.3",
-    "del": "6.0.0",
     "geckodriver": "4.3.0",
     "mkdirp": "3.0.1",
     "mocha": "10.4.0",
