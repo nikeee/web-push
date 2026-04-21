@@ -21,23 +21,23 @@ const VALID_UNSAFE_BASE64_PRIVATE_KEY = Buffer.alloc(32).toString("base64");
 const VALID_CONTENT_ENCODING = webPush.supportedContentEncodings.AES_GCM;
 const VALID_EXPIRATION = Math.floor(Date.now() / 1000) + 60 * 60 * 12;
 
-describe("Test Vapid Helpers", function () {
+describe("Test Vapid Helpers", () => {
   const sandbox = sinon.createSandbox();
 
-  beforeEach(function () {
+  beforeEach(() => {
     sandbox.restore();
   });
 
-  after(function () {
+  after(() => {
     sandbox.restore();
   });
 
-  test("is defined", function () {
+  test("is defined", () => {
     assert(webPush.generateVAPIDKeys);
     assert(webPush.getVapidHeaders);
   });
 
-  test("generate vapid keys", function () {
+  test("generate vapid keys", () => {
     const keys = webPush.generateVAPIDKeys();
     assert(keys.privateKey);
     assert(keys.publicKey);
@@ -49,7 +49,7 @@ describe("Test Vapid Helpers", function () {
     assert.equal(Buffer.from(keys.publicKey, "base64url").length, 65);
   });
 
-  test("generate vapid keys with padding", function () {
+  test("generate vapid keys with padding", () => {
     sandbox.stub(crypto, "createECDH").callsFake(() => {
       return {
         generateKeys: () => {},
@@ -69,7 +69,7 @@ describe("Test Vapid Helpers", function () {
     assert.equal(Buffer.from(keys.publicKey, "base64url").length, 65);
   });
 
-  test("generate new vapid keys between calls", function () {
+  test("generate new vapid keys between calls", () => {
     const keys = webPush.generateVAPIDKeys();
     assert(keys.privateKey);
     assert(keys.publicKey);
@@ -79,29 +79,29 @@ describe("Test Vapid Helpers", function () {
     assert.notEqual(keys.publicKey, secondKeys.publicKey);
   });
 
-  test("should throw errors on bad input", function () {
+  test("should throw errors on bad input", () => {
     const badInputs = [
-      function () {
+      () => {
         // No args
         vapidHelper.getVapidHeaders();
       },
-      function () {
+      () => {
         // Missing subject, public key, private key
         vapidHelper.getVapidHeaders(VALID_AUDIENCE);
       },
-      function () {
+      () => {
         // Missing public key, private key
         vapidHelper.getVapidHeaders(VALID_AUDIENCE, VALID_SUBJECT_MAILTO);
       },
-      function () {
+      () => {
         // Missing public key, private key
         vapidHelper.getVapidHeaders(VALID_AUDIENCE, VALID_SUBJECT_URL);
       },
-      function () {
+      () => {
         // Missing private key
         vapidHelper.getVapidHeaders(VALID_AUDIENCE, VALID_SUBJECT_MAILTO, VALID_PUBLIC_KEY);
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           "Not a URL",
           VALID_SUBJECT_MAILTO,
@@ -109,7 +109,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         // http URL protocol
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -118,7 +118,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         // ftp URL protocol
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -127,7 +127,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           "Some Random String",
@@ -135,7 +135,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           VALID_SUBJECT_MAILTO,
@@ -143,7 +143,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           VALID_SUBJECT_MAILTO,
@@ -151,7 +151,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           VALID_SUBJECT_MAILTO,
@@ -159,7 +159,7 @@ describe("Test Vapid Helpers", function () {
           "Example Key",
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           VALID_SUBJECT_MAILTO,
@@ -167,7 +167,7 @@ describe("Test Vapid Helpers", function () {
           Buffer.alloc(5),
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           { something: "else" },
           VALID_SUBJECT_MAILTO,
@@ -175,7 +175,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           { something: "else" },
@@ -183,7 +183,7 @@ describe("Test Vapid Helpers", function () {
           VALID_PRIVATE_KEY,
         );
       },
-      function () {
+      () => {
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
           VALID_SUBJECT_MAILTO,
@@ -192,7 +192,7 @@ describe("Test Vapid Helpers", function () {
           "invalid encoding type",
         );
       },
-      function () {
+      () => {
         // Public key with unsafe base64
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -202,7 +202,7 @@ describe("Test Vapid Helpers", function () {
           VALID_CONTENT_ENCODING,
         );
       },
-      function () {
+      () => {
         // Private key with unsafe base64
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -212,7 +212,7 @@ describe("Test Vapid Helpers", function () {
           VALID_CONTENT_ENCODING,
         );
       },
-      function () {
+      () => {
         // String with text, is not accepted as a valid expiration value
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -223,7 +223,7 @@ describe("Test Vapid Helpers", function () {
           "Not valid expiration: Must be a number, this is a string with text",
         );
       },
-      function () {
+      () => {
         // Object is not accepted as a valid expiration value
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -234,7 +234,7 @@ describe("Test Vapid Helpers", function () {
           { message: "Not valid expiration: Must be a number, this is an object" },
         );
       },
-      function () {
+      () => {
         // Boolean is not accepted as a valid expiration value
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -245,7 +245,7 @@ describe("Test Vapid Helpers", function () {
           true,
         );
       },
-      function () {
+      () => {
         // String is not accepted as a valid expiration value
         vapidHelper.getVapidHeaders(
           VALID_AUDIENCE,
@@ -256,7 +256,7 @@ describe("Test Vapid Helpers", function () {
           "12213",
         );
       },
-      function () {
+      () => {
         // Invalid `expiration` as it exceeds 24 hours in duration
         const invalidExpiration = Math.floor(Date.now() / 1000) + 25 * 60 * 60;
         vapidHelper.getVapidHeaders(
@@ -270,8 +270,8 @@ describe("Test Vapid Helpers", function () {
       },
     ];
 
-    badInputs.forEach(function (badInput, index) {
-      assert.throws(function () {
+    badInputs.forEach((badInput, index) => {
+      assert.throws(() => {
         badInput();
         console.log("Bad Input Test Failed on test: ", index);
       });
@@ -279,7 +279,7 @@ describe("Test Vapid Helpers", function () {
   });
 
   const validInputs = [
-    function (contentEncoding) {
+    contentEncoding => {
       return vapidHelper.getVapidHeaders(
         VALID_AUDIENCE,
         VALID_SUBJECT_URL,
@@ -288,7 +288,7 @@ describe("Test Vapid Helpers", function () {
         contentEncoding,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       // localhost https: subject; should pass, since we don't throw an error for this, just warn to console
       return vapidHelper.getVapidHeaders(
         VALID_AUDIENCE,
@@ -298,7 +298,7 @@ describe("Test Vapid Helpers", function () {
         contentEncoding,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       return vapidHelper.getVapidHeaders(
         VALID_AUDIENCE,
         VALID_SUBJECT_MAILTO,
@@ -307,7 +307,7 @@ describe("Test Vapid Helpers", function () {
         contentEncoding,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       // localhost mailto: subject
       return vapidHelper.getVapidHeaders(
         VALID_AUDIENCE,
@@ -317,7 +317,7 @@ describe("Test Vapid Helpers", function () {
         contentEncoding,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       return vapidHelper.getVapidHeaders(
         VALID_AUDIENCE,
         VALID_SUBJECT_URL,
@@ -327,7 +327,7 @@ describe("Test Vapid Helpers", function () {
         VALID_EXPIRATION,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       // 0 is a valid value for `expiration`
       // since the the `expiration` value isn't checked for minimum
       const secondsFromEpoch = 0;
@@ -340,7 +340,7 @@ describe("Test Vapid Helpers", function () {
         secondsFromEpoch,
       );
     },
-    function (contentEncoding) {
+    contentEncoding => {
       // Valid value for `secondsFromEpoch` passed in to
       // `vapidHelper.getVapidHeaders` function
       const secondsFromEpoch = Math.floor(Date.now() / 1000) + 5 * 60 * 60;
@@ -356,7 +356,7 @@ describe("Test Vapid Helpers", function () {
   ];
 
   function testValidInputs(contentEncoding) {
-    validInputs.forEach(function (validInput, index) {
+    validInputs.forEach((validInput, index) => {
       try {
         const headers = validInput(contentEncoding);
         assert(headers.Authorization);
@@ -371,11 +371,11 @@ describe("Test Vapid Helpers", function () {
     });
   }
 
-  test("should get valid VAPID headers (aesgcm)", function () {
+  test("should get valid VAPID headers (aesgcm)", () => {
     testValidInputs(webPush.supportedContentEncodings.AES_GCM);
   });
 
-  test("should get valid VAPID headers (aes128gcm)", function () {
+  test("should get valid VAPID headers (aes128gcm)", () => {
     testValidInputs(webPush.supportedContentEncodings.AES_128_GCM);
   });
 });

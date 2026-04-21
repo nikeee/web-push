@@ -7,7 +7,7 @@ import * as portfinder from "portfinder";
 export default function createServer() {
   const demoPath = "test/data/demo";
 
-  const server = http.createServer(function (req, res) {
+  const server = http.createServer((req, res) => {
     try {
       if (req.method === "GET") {
         // Ignore query parameters which are used to inject application keys
@@ -40,7 +40,7 @@ export default function createServer() {
     }
   });
 
-  portfinder.getPort(function (err, port) {
+  portfinder.getPort((err, port) => {
     if (err) {
       server.port = 50005;
     } else {
@@ -49,8 +49,8 @@ export default function createServer() {
     server.listen(server.port);
   });
 
-  return new Promise(function (resolve) {
-    server.on("listening", function () {
+  return new Promise(resolve => {
+    server.on("listening", () => {
       resolve(server);
     });
   });

@@ -9,8 +9,8 @@ import * as jws from "jws";
 import { generateRequestDetails } from "../src/index.ts";
 import { generateVAPIDKeys } from "../src/vapid-helper.ts";
 
-describe("Test Generate Request Details", function () {
-  test("is defined", function () {
+describe("Test Generate Request Details", () => {
+  test("is defined", () => {
     assert(generateRequestDetails);
   });
 
@@ -248,8 +248,8 @@ describe("Test Generate Request Details", function () {
     },
   ];
 
-  invalidRequests.forEach(function (invalidRequest) {
-    test(invalidRequest.testTitle, function () {
+  invalidRequests.forEach(invalidRequest => {
+    test(invalidRequest.testTitle, () => {
       if (invalidRequest.addEndpoint) {
         invalidRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:8080";
       }
@@ -259,7 +259,7 @@ describe("Test Generate Request Details", function () {
           "?" + invalidRequest.serverFlags.join("&");
       }
 
-      assert.throws(function () {
+      assert.throws(() => {
         return generateRequestDetails(
           invalidRequest.requestOptions.subscription,
           invalidRequest.requestOptions.message,
@@ -269,7 +269,7 @@ describe("Test Generate Request Details", function () {
     });
   });
 
-  test("Extra headers", function () {
+  test("Extra headers", () => {
     let subscription = { endpoint: "https://127.0.0.1:8080" };
     let message;
     let extraOptions = {
@@ -285,7 +285,7 @@ describe("Test Generate Request Details", function () {
     assert.equal(details.headers.Urgency, extraOptions.headers.Urgency);
   });
 
-  test("Audience contains port with aes128gcm", function () {
+  test("Audience contains port with aes128gcm", () => {
     const subscription = {
       endpoint: "http://example.com:4242/life-universe-and-everything",
     };
@@ -312,7 +312,7 @@ describe("Test Generate Request Details", function () {
     assert.equal(audience, "http://example.com:4242", "Audience contains expected value with port");
   });
 
-  test("Audience contains port with aesgcm", function () {
+  test("Audience contains port with aesgcm", () => {
     const subscription = {
       endpoint: "http://example.com:4242/life-universe-and-everything",
     };
@@ -340,7 +340,7 @@ describe("Test Generate Request Details", function () {
     assert.equal(audience, "http://example.com:4242", "Audience contains expected value with port");
   });
 
-  test("Proxy option", function () {
+  test("Proxy option", () => {
     let subscription = { endpoint: "https://127.0.0.1:8080" };
     let message;
     let extraOptions = {
@@ -350,7 +350,7 @@ describe("Test Generate Request Details", function () {
     assert.equal(details.proxy, extraOptions.proxy);
   });
 
-  test("Proxy option as an object", function () {
+  test("Proxy option as an object", () => {
     let subscription = {
       endpoint: "https://127.0.0.1:8080",
     };
@@ -362,7 +362,7 @@ describe("Test Generate Request Details", function () {
     assert.equal(details.proxy, extraOptions.proxy);
   });
 
-  test("Agent option as an https.Agent instance", function () {
+  test("Agent option as an https.Agent instance", () => {
     let subscription = {
       endpoint: "https://127.0.0.1:8080",
     };

@@ -8,25 +8,25 @@ const VALID_SUBJECT_URL = "https://exampe.com/contact";
 const VALID_PUBLIC_KEY = Buffer.alloc(65).toString("base64url");
 const VALID_PRIVATE_KEY = Buffer.alloc(32).toString("base64url");
 
-describe("setVapidDetails()", function () {
-  test("is defined", function () {
+describe("setVapidDetails()", () => {
+  test("is defined", () => {
     assert(setVapidDetails);
   });
 
-  test("Valid URL input", function () {
-    assert.doesNotThrow(function () {
+  test("Valid URL input", () => {
+    assert.doesNotThrow(() => {
       setVapidDetails(VALID_SUBJECT_URL, VALID_PUBLIC_KEY, VALID_PRIVATE_KEY);
     });
   });
 
-  test("Valid mailto: input", function () {
-    assert.doesNotThrow(function () {
+  test("Valid mailto: input", () => {
+    assert.doesNotThrow(() => {
       setVapidDetails(VALID_SUBJECT_MAILTO, VALID_PUBLIC_KEY, VALID_PRIVATE_KEY);
     });
   });
 
-  test("reset Vapid Details with null", function () {
-    assert.doesNotThrow(function () {
+  test("reset Vapid Details with null", () => {
+    assert.doesNotThrow(() => {
       setVapidDetails(null);
     });
   });
@@ -104,9 +104,9 @@ describe("setVapidDetails()", function () {
     },
   ];
 
-  test("Invalid input should throw an error", function () {
-    invalidInputs.forEach(function (invalidInput, index) {
-      assert.throws(function () {
+  test("Invalid input should throw an error", () => {
+    invalidInputs.forEach((invalidInput, index) => {
+      assert.throws(() => {
         setVapidDetails(invalidInput.subject, invalidInput.publicKey, invalidInput.privateKey);
       }, "Error not thrown on input index: " + index);
     });

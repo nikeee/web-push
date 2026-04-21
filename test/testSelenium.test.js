@@ -103,11 +103,11 @@ const browsers = [
 ];
 
 for (const { name, type } of browsers) {
-  describe(`Playwright ${name}`, function () {
+  describe(`Playwright ${name}`, () => {
     test(
       `send/receive notification without payload with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
         });
@@ -117,7 +117,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification without payload with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
         });
@@ -127,7 +127,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with payload with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           payload: "marco",
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
@@ -138,7 +138,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with payload with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           payload: "marco",
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
@@ -149,7 +149,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with vapid with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_GCM,
@@ -160,7 +160,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with vapid with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           vapid: VAPID_PARAM,
           contentEncoding: webPush.supportedContentEncodings.AES_128_GCM,
@@ -171,7 +171,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with payload & vapid with ${name} (aesgcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           payload: "marco",
           vapid: VAPID_PARAM,
@@ -183,7 +183,7 @@ for (const { name, type } of browsers) {
     test(
       `send/receive notification with payload & vapid with ${name} (aes128gcm)`,
       { timeout: PUSH_TEST_TIMEOUT },
-      async function () {
+      async () => {
         await runTest(type, {
           payload: "marco",
           vapid: VAPID_PARAM,

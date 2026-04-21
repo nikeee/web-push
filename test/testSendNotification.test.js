@@ -11,16 +11,16 @@ import * as portfinder from "portfinder";
 import * as WebPushConstants from "../src/web-push-constants.ts";
 import { generateVAPIDKeys } from "../src/vapid-helper.ts";
 
-describe("sendNotification", function () {
+describe("sendNotification", () => {
   let sendNotification;
   let setGCMAPIKey;
   let setVapidDetails;
 
-  beforeEach(function () {
+  beforeEach(() => {
     ({ sendNotification, setGCMAPIKey, setVapidDetails } = require("../src/index"));
   });
 
-  test("is defined", function () {
+  test("is defined", () => {
     assert(sendNotification);
   });
 
@@ -34,12 +34,12 @@ describe("sendNotification", function () {
 
   // https request mock to accept self-signed certificate.
   // Probably worth switching with proxyquire and sinon.
-  const certHTTPSRequest = function (options, listener) {
+  const certHTTPSRequest = (options, listener) => {
     options.rejectUnauthorized = false;
     return originalHTTPSRequest.call(https, options, listener);
   };
 
-  beforeEach(function () {
+  beforeEach(() => {
     requestBody = null;
     requestDetails = null;
 
@@ -58,7 +58,7 @@ describe("sendNotification", function () {
     return returnPromise;
   });
 
-  after(function () {
+  after(() => {
     return closeServer();
   });
 
@@ -80,14 +80,14 @@ describe("sendNotification", function () {
       cert: pem,
     };
 
-    server = https.createServer(options, function (req, res) {
+    server = https.createServer(options, (req, res) => {
       requestBody = Buffer.alloc(0);
 
-      req.on("data", function (chunk) {
+      req.on("data", chunk => {
         requestBody = Buffer.concat([requestBody, chunk]);
       });
 
-      req.on("end", function () {
+      req.on("end", () => {
         requestDetails = req;
 
         if (req.url.indexOf("statusCode=404") !== -1) {
@@ -100,7 +100,7 @@ describe("sendNotification", function () {
       });
     });
 
-    portfinder.getPort(function (err, port) {
+    portfinder.getPort((err, port) => {
       if (err) {
         serverPort = 50005;
       } else {
@@ -110,20 +110,20 @@ describe("sendNotification", function () {
       server.listen(serverPort);
     });
 
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       server.on("listening", resolve);
     });
   }
 
   function closeServer() {
     serverPort = null;
-    return new Promise(function (resolve) {
+    return new Promise(resolve => {
       if (!server) {
         resolve();
         return;
       }
 
-      server.on("close", function () {
+      server.on("close", () => {
         server = null;
         resolve();
       });
@@ -175,7 +175,7 @@ describe("sendNotification", function () {
 
       const keys = requestDetails.headers["crypto-key"].split(";");
       const appServerPublicKey = keys
-        .find(function (key) {
+        .find(key => {
           return key.indexOf("dh=") === 0;
         })
         .substring("dh=".length);
@@ -206,7 +206,7 @@ describe("sendNotification", function () {
 
       if (contentEncoding === WebPushConstants.supportedContentEncodings.AES_GCM) {
         const keys = requestDetails.headers["crypto-key"].split(";");
-        const vapidKeyHeader = keys.find(function (key) {
+        const vapidKeyHeader = keys.find(key => {
           return key.indexOf("p256ecdsa=") === 0;
         });
 
@@ -262,7 +262,7 @@ describe("sendNotification", function () {
 
     const extraHeaders = options.extraOptions && options.extraOptions.headers;
     if (extraHeaders) {
-      Object.keys(extraHeaders).forEach(function (header) {
+      Object.keys(extraHeaders).forEach(header => {
         const normalizedName = header.toLowerCase();
         assert.equal(
           requestDetails.headers[normalizedName],
@@ -410,8 +410,8 @@ describe("sendNotification", function () {
 
   // TODO: Add test for VAPID override
 
-  validRequests.forEach(function (validRequest) {
-    test(validRequest.testTitle + " (aesgcm)", function () {
+  validRequests.forEach(validRequest => {
+    test(validRequest.testTitle + " (aesgcm)", () => {
       // Set the default endpoint if it's not already configured
       if (!validRequest.requestOptions.subscription.endpoint) {
         validRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:" + serverPort;
@@ -431,15 +431,15 @@ describe("sendNotification", function () {
         validRequest.requestOptions.message,
         validRequest.requestOptions.extraOptions,
       )
-        .then(function (response) {
+        .then(response => {
           assert.equal(response.body, "ok");
         })
-        .then(function () {
+        .then(() => {
           validateRequest(validRequest);
         });
     });
 
-    test(validRequest.testTitle + " (aes128gcm)", function () {
+    test(validRequest.testTitle + " (aes128gcm)", () => {
       // Set the default endpoint if it's not already configured
       if (!validRequest.requestOptions.subscription.endpoint) {
         validRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:" + serverPort;
@@ -459,10 +459,10 @@ describe("sendNotification", function () {
         validRequest.requestOptions.message,
         validRequest.requestOptions.extraOptions,
       )
-        .then(function (response) {
+        .then(response => {
           assert.equal(response.body, "ok");
         })
-        .then(function () {
+        .then(() => {
           validateRequest(validRequest);
         });
     });
@@ -628,11 +628,11 @@ describe("sendNotification", function () {
     },
   ];
 
-  validGCMRequests.forEach(function (validGCMRequest) {
-    test(validGCMRequest.testTitle, function () {
+  validGCMRequests.forEach(validGCMRequest => {
+    test(validGCMRequest.testTitle, () => {
       // This mocks out the httpsrequest used by web push.
       // Probably worth switching with proxyquire and sinon.
-      https.request = function (options, listener) {
+      https.request = (options, listener) => {
         options.hostname = "127.0.0.1";
         options.port = serverPort;
         options.path = "/";
@@ -667,10 +667,10 @@ describe("sendNotification", function () {
         validGCMRequest.requestOptions.message,
         validGCMRequest.requestOptions.extraOptions,
       )
-        .then(function (response) {
+        .then(response => {
           assert.equal(response.body, "ok");
         })
-        .then(function () {
+        .then(() => {
           validateRequest(validGCMRequest);
         });
     });
@@ -868,8 +868,8 @@ describe("sendNotification", function () {
     },
   ];
 
-  invalidRequests.forEach(function (invalidRequest) {
-    test(invalidRequest.testTitle + " (aesgcm)", function () {
+  invalidRequests.forEach(invalidRequest => {
+    test(invalidRequest.testTitle + " (aesgcm)", () => {
       if (invalidRequest.addEndpoint) {
         invalidRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:" + serverPort;
       }
@@ -888,16 +888,16 @@ describe("sendNotification", function () {
         invalidRequest.requestOptions.message,
         invalidRequest.requestOptions.extraOptions,
       ).then(
-        function () {
+        () => {
           throw new Error("Expected promise to reject");
         },
-        function () {
+        () => {
           // NOOP, this error is expected
         },
       );
     });
 
-    test(invalidRequest.testTitle + " (aes128gcm)", function () {
+    test(invalidRequest.testTitle + " (aes128gcm)", () => {
       if (invalidRequest.addEndpoint) {
         invalidRequest.requestOptions.subscription.endpoint = "https://127.0.0.1:" + serverPort;
       }
@@ -916,26 +916,26 @@ describe("sendNotification", function () {
         invalidRequest.requestOptions.message,
         invalidRequest.requestOptions.extraOptions,
       ).then(
-        function () {
+        () => {
           throw new Error("Expected promise to reject");
         },
-        function () {
+        () => {
           // NOOP, this error is expected
         },
       );
     });
   });
 
-  test("rejects when it can't connect to the server", function () {
+  test("rejects when it can't connect to the server", () => {
     const currentServerPort = serverPort;
-    return closeServer().then(function () {
+    return closeServer().then(() => {
       return sendNotification({
         endpoint: "https://127.0.0.1:" + currentServerPort,
       }).then(
-        function () {
+        () => {
           throw new Error("sendNotification should have rejected due to server not running");
         },
-        function () {
+        () => {
           // NOOP
         },
       );
