@@ -1,18 +1,58 @@
-import * as https from "node:https";
-
 import WebPushError from "./WebPushError.ts";
 import * as vapidHelper from "./vapid-helper.ts";
 import * as encryptionHelper from "./encryption-helper.ts";
 import * as webPushConstants from "./web-push-constants.ts";
 import * as urlBase64Helper from "./urlsafe-base64-helper.ts";
 
-import { HttpsProxyAgent } from "https-proxy-agent";
+export interface PushSubscription {
+  endpoint: string;
+  keys?: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+export interface VapidDetails {
+  subject: string;
+  publicKey: string;
+  privateKey: string;
+}
+
+type ContentEncoding = (typeof webPushConstants.supportedContentEncodings)[keyof typeof webPushConstants.supportedContentEncodings];
+type Urgency = (typeof webPushConstants.supportedUrgency)[keyof typeof webPushConstants.supportedUrgency];
+
+export interface RequestOptions {
+  headers?: Record<string, string>;
+  gcmAPIKey?: string;
+  vapidDetails?: VapidDetails | null;
+  TTL?: number;
+  contentEncoding?: ContentEncoding;
+  urgency?: Urgency;
+  topic?: string;
+  dispatcher?: unknown;
+  signal?: AbortSignal;
+}
+
+export interface RequestDetails {
+  method: string;
+  headers: Record<string, string | number>;
+  body: Buffer | null;
+  endpoint: string;
+  dispatcher?: unknown;
+  signal?: AbortSignal;
+}
+
+export interface SendResult {
+  statusCode: number;
+  body: string;
+  headers: Record<string, string>;
+}
 
 // Default TTL is four weeks.
 const DEFAULT_TTL = 2419200;
 
 let gcmAPIKey: string | null = "";
-let vapidDetails: { subject: string; publicKey: string; privateKey: string } | null | undefined;
+let vapidDetails: VapidDetails | null | undefined;
 
 export default class WebPushLib {
   setGCMAPIKey(apiKey: string | null): void {
@@ -45,7 +85,7 @@ export default class WebPushLib {
     };
   }
 
-  generateRequestDetails(subscription: any, payload?: string | Buffer | null, options?: any): any {
+  generateRequestDetails(subscription: PushSubscription, payload?: string | Buffer | null, options?: RequestOptions): RequestDetails {
     if (!subscription || !subscription.endpoint) {
       throw new Error("You must pass in a subscription with at least " + "an endpoint.");
     }
@@ -73,12 +113,11 @@ export default class WebPushLib {
     let currentVapidDetails = vapidDetails;
     let timeToLive: number | undefined = DEFAULT_TTL;
     let extraHeaders: Record<string, string> = {};
-    let contentEncoding: string = webPushConstants.supportedContentEncodings.AES_128_GCM;
-    let urgency: string = webPushConstants.supportedUrgency.NORMAL;
+    let contentEncoding: ContentEncoding = webPushConstants.supportedContentEncodings.AES_128_GCM;
+    let urgency: Urgency = webPushConstants.supportedUrgency.NORMAL;
     let topic: string | undefined;
-    let proxy: string | { host: string } | undefined;
-    let agent: https.Agent | undefined;
-    let timeout: number | undefined;
+    let dispatcher: unknown;
+    let signal: AbortSignal | undefined;
 
     if (options) {
       const validOptionKeys = [
@@ -89,9 +128,8 @@ export default class WebPushLib {
         "contentEncoding",
         "urgency",
         "topic",
-        "proxy",
-        "agent",
-        "timeout",
+        "dispatcher",
+        "signal",
       ];
       const optionKeys = Object.keys(options);
       for (let i = 0; i < optionKeys.length; i += 1) {
@@ -111,7 +149,7 @@ export default class WebPushLib {
       if (options.headers) {
         extraHeaders = options.headers;
         let duplicates = Object.keys(extraHeaders).filter(header => {
-          return typeof options[header] !== "undefined";
+          return typeof (options as Record<string, unknown>)[header] !== "undefined";
         });
 
         if (duplicates.length > 0) {
@@ -178,30 +216,12 @@ export default class WebPushLib {
         topic = options.topic;
       }
 
-      if (options.proxy) {
-        if (typeof options.proxy === "string" || typeof options.proxy.host === "string") {
-          proxy = options.proxy;
-        } else {
-          console.warn(
-            "Attempt to use proxy option, but invalid type it should be a string or proxy options object.",
-          );
-        }
+      if (options.dispatcher) {
+        dispatcher = options.dispatcher;
       }
 
-      if (options.agent) {
-        if (options.agent instanceof https.Agent) {
-          if (proxy) {
-            console.warn("Agent option will be ignored because proxy option is defined.");
-          }
-
-          agent = options.agent;
-        } else {
-          console.warn("Wrong type for the agent option, it should be an instance of https.Agent.");
-        }
-      }
-
-      if (typeof options.timeout === "number") {
-        timeout = options.timeout;
+      if (options.signal) {
+        signal = options.signal;
       }
     }
 
@@ -209,11 +229,13 @@ export default class WebPushLib {
       timeToLive = DEFAULT_TTL;
     }
 
-    const requestDetails: any = {
+    const requestDetails: RequestDetails = {
       method: "POST",
       headers: {
         TTL: timeToLive,
       },
+      body: null,
+      endpoint: subscription.endpoint,
     };
     Object.keys(extraHeaders).forEach(header => {
       requestDetails.headers[header] = extraHeaders[header];
@@ -222,8 +244,8 @@ export default class WebPushLib {
 
     if (payload) {
       const encrypted = encryptionHelper.encrypt(
-        subscription.keys.p256dh,
-        subscription.keys.auth,
+        subscription.keys!.p256dh,
+        subscription.keys!.auth,
         payload,
         contentEncoding,
       );
@@ -292,100 +314,59 @@ export default class WebPushLib {
     }
 
     requestDetails.body = requestPayload;
-    requestDetails.endpoint = subscription.endpoint;
 
-    if (proxy) {
-      requestDetails.proxy = proxy;
+    if (dispatcher) {
+      requestDetails.dispatcher = dispatcher;
     }
 
-    if (agent) {
-      requestDetails.agent = agent;
-    }
-
-    if (timeout) {
-      requestDetails.timeout = timeout;
+    if (signal) {
+      requestDetails.signal = signal;
     }
 
     return requestDetails;
   }
 
-  sendNotification(
-    subscription: any,
+  async sendNotification(
+    subscription: PushSubscription,
     payload?: string | Buffer | null,
-    options?: any,
-  ): Promise<{ statusCode: number; body: string; headers: any }> {
-    let requestDetails: any;
-    try {
-      requestDetails = this.generateRequestDetails(subscription, payload, options);
-    } catch (err) {
-      return Promise.reject(err);
+    options?: RequestOptions,
+  ): Promise<SendResult> {
+    const requestDetails = this.generateRequestDetails(subscription, payload, options);
+
+    const fetchOptions: RequestInit & { dispatcher?: unknown } = {
+      method: requestDetails.method,
+      headers: requestDetails.headers as Record<string, string>,
+    };
+
+    if (requestDetails.body) {
+      fetchOptions.body = new Uint8Array(requestDetails.body);
     }
 
-    return new Promise((resolve, reject) => {
-      const httpsOptions: any = {};
-      const urlParts = new URL(requestDetails.endpoint);
-      httpsOptions.hostname = urlParts.hostname;
-      httpsOptions.port = urlParts.port || undefined;
-      httpsOptions.path = urlParts.pathname + urlParts.search;
+    if (requestDetails.signal) {
+      fetchOptions.signal = requestDetails.signal;
+    }
 
-      httpsOptions.headers = requestDetails.headers;
-      httpsOptions.method = requestDetails.method;
+    if (requestDetails.dispatcher) {
+      fetchOptions.dispatcher = requestDetails.dispatcher;
+    }
 
-      if (requestDetails.timeout) {
-        httpsOptions.timeout = requestDetails.timeout;
-      }
+    const response = await fetch(requestDetails.endpoint, fetchOptions);
+    const responseText = await response.text();
 
-      if (requestDetails.agent) {
-        httpsOptions.agent = requestDetails.agent;
-      }
+    if (response.status < 200 || response.status > 299) {
+      throw new WebPushError(
+        "Received unexpected response code",
+        response.status,
+        Object.fromEntries(response.headers.entries()),
+        responseText,
+        requestDetails.endpoint,
+      );
+    }
 
-      if (requestDetails.proxy) {
-        httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
-      }
-
-      const pushRequest = https.request(httpsOptions, pushResponse => {
-        let responseText = "";
-
-        pushResponse.on("data", chunk => {
-          responseText += chunk;
-        });
-
-        pushResponse.on("end", () => {
-          if (pushResponse.statusCode! < 200 || pushResponse.statusCode! > 299) {
-            reject(
-              new WebPushError(
-                "Received unexpected response code",
-                pushResponse.statusCode!,
-                pushResponse.headers as Record<string, string>,
-                responseText,
-                requestDetails.endpoint,
-              ),
-            );
-          } else {
-            resolve({
-              statusCode: pushResponse.statusCode!,
-              body: responseText,
-              headers: pushResponse.headers,
-            });
-          }
-        });
-      });
-
-      if (requestDetails.timeout) {
-        pushRequest.on("timeout", () => {
-          pushRequest.destroy(new Error("Socket timeout"));
-        });
-      }
-
-      pushRequest.on("error", e => {
-        reject(e);
-      });
-
-      if (requestDetails.body) {
-        pushRequest.write(requestDetails.body);
-      }
-
-      pushRequest.end();
-    });
+    return {
+      statusCode: response.status,
+      body: responseText,
+      headers: Object.fromEntries(response.headers.entries()),
+    };
   }
 }
